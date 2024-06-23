@@ -278,11 +278,11 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
  */
 
 /*global self, unescape */
-
 /*jslint bitwise: true, regexp: true, confusion: true, es5: true, vars: true, white: true,
   plusplus: true */
 
 /*! @source http://purl.eligrey.com/github/Blob.js/blob/master/Blob.js */
+
 (function (global) {
   (function (factory) {
     if (typeof define === 'function' && define.amd) {
@@ -297,40 +297,34 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
     }
   })(exports => {
     exports.URL = global.URL || global.webkitURL;
-
     if (global.Blob && global.URL) {
       try {
         new Blob();
         return;
       } catch (e) {}
-    } // Internally we use a BlobBuilder implementation to base Blob off of
+    }
+
+    // Internally we use a BlobBuilder implementation to base Blob off of
     // in order to support older browsers that only have BlobBuilder
-
-
     const BlobBuilder = global.BlobBuilder || global.WebKitBlobBuilder || global.MozBlobBuilder || function () {
       const get_class = function (object) {
         return Object.prototype.toString.call(object).match(/^\[object\s(.*)\]$/)[1];
       };
-
       const FakeBlobBuilder = function BlobBuilder() {
         this.data = [];
       };
-
       const FakeBlob = function Blob(data, type, encoding) {
         this.data = data;
         this.size = data.length;
         this.type = type;
         this.encoding = encoding;
       };
-
       const FBB_proto = FakeBlobBuilder.prototype;
       const FB_proto = FakeBlob.prototype;
       const FileReaderSync = global.FileReaderSync;
-
       const FileException = function (type) {
         this.code = this[this.name = type];
       };
-
       const file_ex_codes = ('NOT_FOUND_ERR SECURITY_ERR ABORT_ERR NOT_READABLE_ERR ENCODING_ERR ' + 'NO_MODIFICATION_ALLOWED_ERR INVALID_STATE_ERR SYNTAX_ERR').split(' ');
       let file_ex_code = file_ex_codes.length;
       const real_URL = global.URL || global.webkitURL || exports;
@@ -343,18 +337,15 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
       const Uint8Array = global.Uint8Array;
       const origin = /^[\w-]+:\/*\[?[\w\.:-]+\]?(?::[0-9]+)?/;
       FakeBlob.fake = FB_proto.fake = true;
-
       while (file_ex_code--) {
         FileException.prototype[file_ex_codes[file_ex_code]] = file_ex_code + 1;
-      } // Polyfill URL
-
-
+      }
+      // Polyfill URL
       if (!real_URL.createObjectURL) {
         URL = exports.URL = function (uri) {
           const uri_info = document.createElementNS('http://www.w3.org/1999/xhtml', 'a');
           let uri_origin;
           uri_info.href = uri;
-
           if (!('origin' in uri_info)) {
             if (uri_info.protocol.toLowerCase() === 'data:') {
               uri_info.origin = null;
@@ -363,28 +354,22 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
               uri_info.origin = uri_origin && uri_origin[1];
             }
           }
-
           return uri_info;
         };
       }
-
       URL.createObjectURL = function (blob) {
         let type = blob.type;
         let data_URI_header;
-
         if (type === null) {
           type = 'application/octet-stream';
         }
-
         if (blob instanceof FakeBlob) {
           data_URI_header = `data:${type}`;
-
           if (blob.encoding === 'base64') {
             return `${data_URI_header};base64,${blob.data}`;
           } else if (blob.encoding === 'URI') {
             return `${data_URI_header},${decodeURIComponent(blob.data)}`;
           }
-
           if (btoa) {
             return `${data_URI_header};base64,${btoa(blob.data)}`;
           } else {
@@ -394,28 +379,22 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
           return real_create_object_URL.call(real_URL, blob);
         }
       };
-
       URL.revokeObjectURL = function (object_URL) {
         if (object_URL.substring(0, 5) !== 'data:' && real_revoke_object_URL) {
           real_revoke_object_URL.call(real_URL, object_URL);
         }
       };
-
-      FBB_proto.append = function (data
-      /*, endings*/
-      ) {
-        const bb = this.data; // decode data to a binary string
-
+      FBB_proto.append = function (data /*, endings*/) {
+        const bb = this.data;
+        // decode data to a binary string
         if (Uint8Array && (data instanceof ArrayBuffer || data instanceof Uint8Array)) {
           let str = '';
           const buf = new Uint8Array(data);
           let i = 0;
           const buf_len = buf.length;
-
           for (; i < buf_len; i++) {
             str += String.fromCharCode(buf[i]);
           }
-
           bb.push(str);
         } else if (get_class(data) === 'Blob' || get_class(data) === 'File') {
           if (FileReaderSync) {
@@ -436,51 +415,39 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
         } else {
           if (typeof data !== 'string') {
             data += ''; // convert unsupported types to strings
-          } // decode UTF-16 to binary string
-
-
+          }
+          // decode UTF-16 to binary string
           bb.push(unescape(encodeURIComponent(data)));
         }
       };
-
       FBB_proto.getBlob = function (type) {
         if (!arguments.length) {
           type = null;
         }
-
         return new FakeBlob(this.data.join(''), type, 'raw');
       };
-
       FBB_proto.toString = function () {
         return '[object BlobBuilder]';
       };
-
       FB_proto.slice = function (start, end, type) {
         const args = arguments.length;
-
         if (args < 3) {
           type = null;
         }
-
         return new FakeBlob(this.data.slice(start, args > 1 ? end : this.data.length), type, this.encoding);
       };
-
       FB_proto.toString = function () {
         return '[object Blob]';
       };
-
       FB_proto.close = function () {
         this.size = 0;
         delete this.data;
       };
-
       return FakeBlobBuilder;
     }();
-
     exports.Blob = function (blobParts, options) {
       const type = options ? options.type || '' : '';
       const builder = new BlobBuilder();
-
       if (blobParts) {
         for (let i = 0, len = blobParts.length; i < len; i++) {
           if (Uint8Array && blobParts[i] instanceof Uint8Array) {
@@ -490,20 +457,15 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
           }
         }
       }
-
       const blob = builder.getBlob(type);
-
       if (!blob.slice && blob.webkitSlice) {
         blob.slice = blob.webkitSlice;
       }
-
       return blob;
     };
-
     const getPrototypeOf = Object.getPrototypeOf || function (object) {
       return object.__proto__;
     };
-
     exports.Blob.prototype = getPrototypeOf(new exports.Blob());
   });
 })(typeof self !== 'undefined' && self || typeof window !== 'undefined' && window || typeof global !== 'undefined' && global || typeof globalThis !== 'undefined' && globalThis || (void 0).content || void 0);
@@ -516,22 +478,18 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   function e(e) {
     this.message = e;
   }
-
   var t = "undefined" != typeof exports ? exports : "undefined" != typeof self ? self : $.global,
-      r = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+    r = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
   e.prototype = new Error(), e.prototype.name = "InvalidCharacterError", t.btoa || (t.btoa = function (t) {
     for (var o, n, a = String(t), i = 0, f = r, c = ""; a.charAt(0 | i) || (f = "=", i % 1); c += f.charAt(63 & o >> 8 - i % 1 * 8)) {
       if (n = a.charCodeAt(i += .75), n > 255) throw new e("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");
       o = o << 8 | n;
     }
-
     return c;
   }), t.atob || (t.atob = function (t) {
     var o = String(t).replace(/[=]+$/, "");
     if (o.length % 4 == 1) throw new e("'atob' failed: The string to be decoded is not correctly encoded.");
-
     for (var n, a, i = 0, f = 0, c = ""; a = o.charAt(f++); ~a && (n = i % 4 ? 64 * n + a : a, i++ % 4) ? c += String.fromCharCode(255 & n >> (-2 * i & 6)) : 0) a = r.indexOf(a);
-
     return c;
   });
 }();
@@ -540,82 +498,61 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
 "use strict";
 
 globalThis.__EDITOR__ = globalThis.process && 'electron' in globalThis.process.versions;
-
 require('./wasm');
-
 const jsbWindow = require('../jsbWindow');
-
 jsb.device = jsb.Device; // cc namespace will be reset to {} in creator, use jsb namespace instead.
 
 const {
   btoa,
   atob
 } = require('./base64/base64.min');
-
 jsbWindow.btoa = btoa;
 jsbWindow.atob = atob;
-
 const {
   Blob,
   URL
 } = require('./Blob');
-
 jsbWindow.Blob = Blob;
 jsbWindow.URL = URL;
 jsbWindow.DOMParser = require('./xmldom/dom-parser').DOMParser;
 jsbWindow.XMLHttpRequest = jsb.XMLHttpRequest;
 jsbWindow.SocketIO = jsb.SocketIO;
 jsbWindow.WebSocket = jsb.WebSocket;
-
 require('./jsb_prepare');
-
 require('./jsb-adapter');
-
 require('./jsb_audioengine');
-
 require('./jsb_input');
-
 let _oldRequestFrameCallback = null;
 let _requestAnimationFrameID = 0;
 const _requestAnimationFrameCallbacks = {};
 let _firstTick = true;
-
 jsbWindow.requestAnimationFrame = function (cb) {
   const id = ++_requestAnimationFrameID;
   _requestAnimationFrameCallbacks[id] = cb;
   return id;
 };
-
 jsbWindow.cancelAnimationFrame = function (id) {
   delete _requestAnimationFrameCallbacks[id];
 };
-
 function tick(nowMilliSeconds) {
   if (_firstTick) {
     _firstTick = false;
-
     if (jsbWindow.onload) {
       const event = new Event('load');
       event._target = globalThis;
       jsbWindow.onload(event);
     }
   }
-
   fireTimeout(nowMilliSeconds);
-
   for (const id in _requestAnimationFrameCallbacks) {
     _oldRequestFrameCallback = _requestAnimationFrameCallbacks[id];
-
     if (_oldRequestFrameCallback) {
       delete _requestAnimationFrameCallbacks[id];
-
       _oldRequestFrameCallback(nowMilliSeconds);
     }
   }
 }
-
 let _timeoutIDIndex = 0;
-
 class TimeoutInfo {
   constructor(cb, delay, isRepeat, target, args) {
     this.cb = cb;
@@ -626,17 +563,12 @@ class TimeoutInfo {
     this.target = target;
     this.args = args;
   }
-
 }
-
 const _timeoutInfos = {};
-
 function fireTimeout(nowMilliSeconds) {
   let info;
-
   for (const id in _timeoutInfos) {
     info = _timeoutInfos[id];
-
     if (info && info.cb) {
       if (nowMilliSeconds - info.start >= info.delay) {
         // console.log(`fireTimeout: id ${id}, start: ${info.start}, delay: ${info.delay}, now: ${nowMilliSeconds}`);
@@ -645,7 +577,6 @@ function fireTimeout(nowMilliSeconds) {
         } else if (typeof info.cb === 'function') {
           info.cb.apply(info.target, info.args);
         }
-
         if (info.isRepeat) {
           info.start = nowMilliSeconds;
         } else {
@@ -655,76 +586,69 @@ function fireTimeout(nowMilliSeconds) {
     }
   }
 }
-
 function createTimeoutInfo(prevFuncArgs, isRepeat) {
   const cb = prevFuncArgs[0];
-
   if (!cb) {
     console.error('createTimeoutInfo doesn\'t pass a callback ...');
     return 0;
   }
-
   const delay = prevFuncArgs.length > 1 ? prevFuncArgs[1] : 0;
   let args;
-
   if (prevFuncArgs.length > 2) {
     args = Array.prototype.slice.call(prevFuncArgs, 2);
   }
-
   const info = new TimeoutInfo(cb, delay, isRepeat, this, args);
   _timeoutInfos[info.id] = info;
   return info.id;
 }
+if (window.oh && window.scriptEngineType === 'napi') {
+  console.log(`Openharmony with napi has alreay implemented setTimeout/setInterval`);
+} else {
+  // In openharmony, the setTimeout function will conflict with the timer of the worker thread and cause a crash,
+  // so you need to use the default timer
+  jsbWindow.setTimeout = function (cb) {
+    return createTimeoutInfo(arguments, false);
+  };
+  jsbWindow.clearTimeout = function (id) {
+    delete _timeoutInfos[id];
+  };
+  jsbWindow.setInterval = function (cb) {
+    return createTimeoutInfo(arguments, true);
+  };
+  jsbWindow.clearInterval = jsbWindow.clearTimeout;
+}
+jsbWindow.alert = console.error.bind(console);
 
-jsbWindow.setTimeout = function (cb) {
-  return createTimeoutInfo(arguments, false);
-};
-
-jsbWindow.clearTimeout = function (id) {
-  delete _timeoutInfos[id];
-};
-
-jsbWindow.setInterval = function (cb) {
-  return createTimeoutInfo(arguments, true);
-};
-
-jsbWindow.clearInterval = jsbWindow.clearTimeout;
-jsbWindow.alert = console.error.bind(console); // File utils (Temporary, won't be accessible)
-
+// File utils (Temporary, won't be accessible)
 if (typeof jsb.FileUtils !== 'undefined') {
   jsb.fileUtils = jsb.FileUtils.getInstance();
   delete jsb.FileUtils;
 }
-
 jsbWindow.XMLHttpRequest.prototype.addEventListener = function (eventName, listener, options) {
   this[`on${eventName}`] = listener;
 };
-
 jsbWindow.XMLHttpRequest.prototype.removeEventListener = function (eventName, listener, options) {
   this[`on${eventName}`] = null;
-}; // SocketIO
+};
 
-
+// SocketIO
 if (jsbWindow.SocketIO) {
   jsbWindow.io = jsbWindow.SocketIO;
   jsbWindow.SocketIO.prototype._Emit = jsbWindow.SocketIO.prototype.emit;
-
   jsbWindow.SocketIO.prototype.emit = function (uri, delegate) {
     if (typeof delegate === 'object') {
       delegate = JSON.stringify(delegate);
     }
-
     this._Emit(uri, delegate);
   };
 }
+jsbWindow.gameTick = tick;
 
-jsbWindow.gameTick = tick; // generate get set function
-
+// generate get set function
 jsb.generateGetSet = function (moduleObj) {
   for (const classKey in moduleObj) {
     const classProto = moduleObj[classKey] && moduleObj[classKey].prototype;
     if (!classProto) continue;
-
     for (const getName in classProto) {
       const getPos = getName.search(/^get/);
       if (getPos == -1) continue;
@@ -739,17 +663,14 @@ jsb.generateGetSet = function (moduleObj) {
       if (classProto.hasOwnProperty(propName)) continue;
       const setFunc = classProto[setName];
       const hasSetFunc = typeof setFunc === 'function';
-
       if (hasSetFunc) {
         Object.defineProperty(classProto, propName, {
           get() {
             return this[getName]();
           },
-
           set(val) {
             this[setName](val);
           },
-
           configurable: true
         });
       } else {
@@ -757,32 +678,34 @@ jsb.generateGetSet = function (moduleObj) {
           get() {
             return this[getName]();
           },
-
           configurable: true
         });
       }
     }
   }
 };
-
 for (const key in jsbWindow) {
   if (globalThis[key] === undefined) {
     globalThis[key] = jsbWindow[key];
   }
 }
 
+// In the openharmony platform, XMLHttpRequest is not undefined, but there are problems to using it.
+// So the native implementation is forced to be used.
+if (window.oh && typeof globalThis.XMLHttpRequest !== 'undefined') {
+  globalThis.XMLHttpRequest = jsbWindow.XMLHttpRequest;
+}
 if (typeof globalThis.window === 'undefined') {
   globalThis.window = globalThis;
-} // promise polyfill relies on setTimeout implementation
+}
 
-
+// promise polyfill relies on setTimeout implementation
 require('./promise.min');
 
 },{"../jsbWindow":44,"./Blob":3,"./base64/base64.min":4,"./jsb-adapter":30,"./jsb_audioengine":35,"./jsb_input":36,"./jsb_prepare":37,"./promise.min":38,"./wasm":39,"./xmldom/dom-parser":40}],6:[function(require,module,exports){
 "use strict";
 
 const ImageData = require('./ImageData');
-
 class Context2DAttribute {
   constructor() {
     this.lineWidth = undefined;
@@ -799,259 +722,200 @@ class Context2DAttribute {
     this.shadowOffsetX = undefined;
     this.shadowOffsetY = undefined;
   }
-
 }
-
 jsb.CanvasRenderingContext2D.prototype._ctor = function () {
   this.__nativeRefs = {};
 };
-
 class CanvasRenderingContext2D {
   constructor(width, height) {
     this._nativeObj = new jsb.CanvasRenderingContext2D(width, height);
     this._attris = new Context2DAttribute();
-  } // Do not cache width and height, as they will change buffer and sync to JS.
+  }
 
-
+  // Do not cache width and height, as they will change buffer and sync to JS.
   get width() {
     return this._nativeObj.width;
   }
-
   set width(val) {
     this._nativeObj.width = val;
   }
-
   get height() {
     return this._nativeObj.height;
   }
-
   set height(val) {
     this._nativeObj.height = val;
   }
-
   get lineWidth() {
     return this._attris.lineWidth;
   }
-
   set lineWidth(val) {
     this._attris.lineWidth = val;
   }
-
   get lineJoin() {
     return this._attris.lineJoin;
   }
-
   set lineJoin(val) {
     this._attris.lineJoin = val;
   }
-
   get fillStyle() {
     return this._attris.fillStyle;
   }
-
   set fillStyle(val) {
     this._attris.fillStyle = val;
   }
-
   get font() {
     return this._attris.font;
   }
-
   set font(val) {
     this._attris.font = val;
   }
-
   get lineCap() {
     return this._attris.lineCap;
   }
-
   set lineCap(val) {
     this._attris.lineCap = val;
   }
-
   get textAlign() {
     return this._attris.textAlign;
   }
-
   set textAlign(val) {
     this._attris.textAlign = val;
   }
-
   get textBaseline() {
     return this._attris.textBaseline;
   }
-
   set textBaseline(val) {
     this._attris.textBaseline = val;
   }
-
   get strokeStyle() {
     return this._attris.strokeStyle;
   }
-
   set strokeStyle(val) {
     this._attris.strokeStyle = val;
   }
-
   get globalCompositeOperation() {
     return this._attris.globalCompositeOperation;
   }
-
   set globalCompositeOperation(val) {
     this._attris.globalCompositeOperation = val;
   }
-
   get shadowBlur() {
     return this._attris.shadowBlur;
   }
-
   set shadowBlur(val) {
     this._attris.shadowBlur = val;
   }
-
   get shadowColor() {
     return this._attris.shadowColor;
   }
-
   set shadowColor(val) {
     this._attris.shadowColor = val;
   }
-
   get shadowOffsetX() {
     return this._attris.shadowOffsetX;
   }
-
   set shadowOffsetX(val) {
     this._attris.shadowOffsetX = val;
   }
-
   get shadowOffsetY() {
     return this._attris.shadowOffsetY;
   }
-
   set shadowOffsetY(val) {
     this._attris.shadowOffsetY = val;
   }
-
   restore() {
     this._nativeObj.restore();
   }
-
   moveTo(x, y) {
     this._nativeObj.moveTo(x, y);
   }
-
   lineTo(x, y) {
     this._nativeObj.lineTo(x, y);
   }
-
   setTransform(a, b, c, d, e, f) {
     this._nativeObj.setTransform(a, b, c, d, e, f);
   }
-
   stroke() {
     this._canvas._dataInner = null;
-
     this._nativeObj.stroke();
   }
-
   measureText(text) {
     return this._nativeObj.measureText(text, this._attris);
   }
-
   fill() {
     this._canvas._dataInner = null;
-
     this._nativeObj.fill();
   }
-
   _fillImageData(data, width, height, offsetX, offsetY) {
     this._canvas._dataInner = null;
-
     this._nativeObj._fillImageData(data, width, height, offsetX, offsetY);
   }
-
   scale(x, y) {
     this._nativeObj.scale(x, y);
   }
-
   clearRect(x, y, width, height) {
     this._canvas._dataInner = null;
-
     this._nativeObj.clearRect(x, y, width, height);
   }
-
   transform(a, b, c, d, e, f) {
     this._nativeObj.transform(a, b, c, d, e, f);
   }
-
   fillText(text, x, y, maxWidth) {
     this._canvas._dataInner = null;
-
     this._nativeObj.fillText(text, x, y, maxWidth, this._attris);
   }
-
   strokeText(text, x, y, maxWidth) {
     this._canvas._dataInner = null;
-
     this._nativeObj.strokeText(text, x, y, maxWidth, this._attris);
   }
-
   save() {
     this._nativeObj.save();
   }
-
   fillRect(x, y, width, height) {
     this._canvas._dataInner = null;
-
     this._nativeObj.fillRect(x, y, width, height, this._attris);
   }
-
   fetchData() {
     if (typeof this._nativeObj.fetchData !== 'undefined') {
       this._nativeObj.fetchData();
     }
   }
-
   rotate(angle) {
     this._nativeObj.rotate(angle);
   }
-
   beginPath() {
     this._nativeObj.beginPath();
   }
-
   rect(x, y, width, height) {
     this._nativeObj.rect(x, y, width, height);
   }
-
   translate(x, y) {
     this._nativeObj.translate(x, y);
   }
-
   createLinearGradient(x0, y0, x1, y1) {
     return this._nativeObj.createLinearGradient(x0, y0, x1, y1);
   }
-
   closePath() {
     this._nativeObj.closePath();
-  } // void ctx.putImageData(imagedata, dx, dy);
+  }
+
+  // void ctx.putImageData(imagedata, dx, dy);
   // void ctx.putImageData(imagedata, dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
-
-
   putImageData(imageData, dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight) {
     this._canvas._data = imageData;
-  } // ImageData ctx.createImageData(imagedata);
+  }
+
+  // ImageData ctx.createImageData(imagedata);
   // ImageData ctx.createImageData(width, height);
-
-
   createImageData(args1, args2) {
     if (typeof args1 === 'number' && typeof args2 === 'number') {
       return new ImageData(args1, args2);
     } else if (args1 instanceof ImageData) {
       return new ImageData(args1.data, args1.width, args1.height);
     }
-  } // Comment it seems it is not used.
+  }
+
+  // Comment it seems it is not used.
   // // ImageData ctx.getImageData(sx, sy, sw, sh);
   // getImageData (sx, sy, sw, sh) {
   //     var canvasWidth = this._canvas._width;
@@ -1074,13 +938,10 @@ class CanvasRenderingContext2D {
   //     return new ImageData(imgBuffer, sw, sh);
   // }
 
-
   _setCanvasBufferUpdatedCallback(func) {
     this._nativeObj._setCanvasBufferUpdatedCallback(func);
   }
-
 }
-
 module.exports = CanvasRenderingContext2D;
 
 },{"./ImageData":22}],7:[function(require,module,exports){
@@ -1097,20 +958,16 @@ class DOMRect {
     this.right = this.x + this.width;
     this.bottom = this.y + this.height;
   }
-
 }
-
 module.exports = DOMRect;
 
 },{}],8:[function(require,module,exports){
 "use strict";
 
 const Event = require('./Event');
-
 class DeviceMotionEvent extends Event {
   constructor(initArgs) {
     super('devicemotion');
-
     if (initArgs) {
       this._acceleration = initArgs.acceleration ? initArgs.acceleration : {
         x: 0,
@@ -1147,36 +1004,27 @@ class DeviceMotionEvent extends Event {
       this._interval = 0;
     }
   }
-
   get acceleration() {
     return this._acceleration;
   }
-
   get accelerationIncludingGravity() {
     return this._accelerationIncludingGravity;
   }
-
   get rotationRate() {
     return this._rotationRate;
   }
-
   get interval() {
     return this._interval;
   }
-
 }
-
 module.exports = DeviceMotionEvent;
 
 },{"./Event":10}],9:[function(require,module,exports){
 "use strict";
 
 const Node = require('./Node');
-
 const DOMRect = require('./DOMRect');
-
 const jsbWindow = require('../../jsbWindow');
-
 class Element extends Node {
   constructor() {
     super();
@@ -1187,24 +1035,19 @@ class Element extends Node {
     this.scrollLeft = 0;
     this.scrollTop = 0;
   }
-
   get clientWidth() {
     return 0;
   }
-
   get clientHeight() {
     return 0;
   }
-
   getBoundingClientRect() {
     return new DOMRect(0, 0, jsbWindow.innerWidth, jsbWindow.innerHeight);
-  } // attrName is a string that names the attribute to be removed from element.
+  }
 
-
+  // attrName is a string that names the attribute to be removed from element.
   removeAttribute(attrName) {}
-
 }
-
 module.exports = Element;
 
 },{"../../jsbWindow":44,"./DOMRect":7,"./Node":26}],10:[function(require,module,exports){
@@ -1214,7 +1057,6 @@ module.exports = Element;
  * @see https://dom.spec.whatwg.org/#interface-event
  * @private
  */
-
 /**
  * The event wrapper.
  * @constructor
@@ -1229,174 +1071,152 @@ class Event {
     this._currentTarget = null;
     this._canceled = false;
     this._stopped = false; // The flag to stop propagation immediately.
-
     this._passiveListener = null;
     this._timeStamp = Date.now();
   }
+
   /**
    * The type of this event.
    * @type {string}
    */
-
-
   get type() {
     return this._type;
   }
+
   /**
    * The target of this event.
    * @type {EventTarget}
    */
-
-
   get target() {
     return this._target;
   }
+
   /**
    * The target of this event.
    * @type {EventTarget}
    */
-
-
   get currentTarget() {
     return this._currentTarget;
   }
-
   get isTrusted() {
     // https://heycam.github.io/webidl/#Unforgeable
     return false;
   }
-
   get timeStamp() {
     return this._timeStamp;
   }
+
   /**
    * @returns {EventTarget[]} The composed path of this event.
    */
-
-
   composedPath() {
     const currentTarget = this._currentTarget;
-
     if (currentTarget === null) {
       return [];
     }
-
     return [currentTarget];
   }
+
   /**
    * The target of this event.
    * @type {number}
    */
-
-
   get eventPhase() {
     return this._eventPhase;
   }
+
   /**
    * Stop event bubbling.
    * @returns {void}
    */
-
-
   stopPropagation() {}
+
   /**
    * Stop event bubbling.
    * @returns {void}
    */
-
-
   stopImmediatePropagation() {
     this._stopped = true;
   }
+
   /**
    * The flag to be bubbling.
    * @type {boolean}
    */
-
-
   get bubbles() {
     return false;
   }
+
   /**
    * The flag to be cancelable.
    * @type {boolean}
    */
-
-
   get cancelable() {
     return true;
   }
+
   /**
    * Cancel this event.
    * @returns {void}
    */
-
-
   preventDefault() {
     if (this._passiveListener !== null) {
       console.warn("Event#preventDefault() was called from a passive listener:", this._passiveListener);
       return;
     }
-
     if (!this.cancelable) {
       return;
     }
-
     this._canceled = true;
   }
+
   /**
    * The flag to indicate cancellation state.
    * @type {boolean}
    */
-
-
   get defaultPrevented() {
     return this._canceled;
   }
+
   /**
    * The flag to be composed.
    * @type {boolean}
    */
-
-
   get composed() {
     return false;
   }
+
   /**
    * The unix time of this event.
    * @type {number}
    */
-
-
   get timeStamp() {
     return this._timeStamp;
   }
-
 }
+
 /**
  * Constant of NONE.
  * @type {number}
  */
-
-
 Event.NONE = 0;
+
 /**
  * Constant of CAPTURING_PHASE.
  * @type {number}
  */
-
 Event.CAPTURING_PHASE = 1;
+
 /**
  * Constant of AT_TARGET.
  * @type {number}
  */
-
 Event.AT_TARGET = 2;
+
 /**
  * Constant of BUBBLING_PHASE.
  * @type {number}
  */
-
 Event.BUBBLING_PHASE = 3;
 module.exports = Event;
 
@@ -1423,11 +1243,12 @@ var __enableCallbackMap = {
   //FIXME: Cocos Creator invokes addEventListener('devicemotion') when engine initializes, it will active sensor hardware.
   // In that case, CPU and temperature cost will increase. Therefore, we require developer to invoke 'jsb.device.setMotionEnabled(true)'
   // on native platforms since most games will not listen motion event.
-  devicemotion: null // devicemotion: function() {
+  devicemotion: null
+  // devicemotion: function() {
   //     jsb.device.setMotionEnabled(true);
   // }
-
 };
+
 var __disableCallbackMap = {
   touch: null,
   mouse: null,
@@ -1435,30 +1256,33 @@ var __disableCallbackMap = {
   // In that case, CPU and temperature cost will increase. Therefore, we require developer to invoke 'jsb.device.setMotionEnabled(true)'
   // on native platforms since most games will not listen motion event.
   keyboard: null,
-  devicemotion: null // devicemotion: function() {
+  devicemotion: null
+  // devicemotion: function() {
   //     jsb.device.setMotionEnabled(false);
   // }
-
 };
+
 const __handleEventNames = {
   touch: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
   mouse: ['mousedown', 'mousemove', 'mouseup', 'mousewheel'],
   keyboard: ['keydown', 'keyup', 'keypress'],
   devicemotion: ['devicemotion']
-}; // Listener types
+};
 
+// Listener types
 const CAPTURE = 1;
 const BUBBLE = 2;
 const ATTRIBUTE = 3;
+
 /**
  * Check whether a given value is an object or not.
  * @param {any} x The value to check.
  * @returns {boolean} `true` if the value is an object.
  */
-
 function isObject(x) {
   return x && typeof x === "object"; //eslint-disable-line no-restricted-syntax
 }
+
 /**
  * EventTarget.
  *
@@ -1469,8 +1293,6 @@ function isObject(x) {
  *
  *     class A extends EventTarget {}
  */
-
-
 class EventTarget {
   constructor() {
     this._targetID = ++__targetID;
@@ -1482,18 +1304,14 @@ class EventTarget {
     };
     this._listeners = new Map();
   }
-
   _associateSystemEventListener(eventName) {
     var handleEventNames;
-
     for (var key in __handleEventNames) {
       handleEventNames = __handleEventNames[key];
-
       if (handleEventNames.indexOf(eventName) > -1) {
         if (__enableCallbackMap[key] && __listenerCountMap[key] === 0) {
           __enableCallbackMap[key]();
         }
-
         if (this._listenerCount[key] === 0) __listenerMap[key][this._targetID] = this;
         ++this._listenerCount[key];
         ++__listenerCountMap[key];
@@ -1501,25 +1319,21 @@ class EventTarget {
       }
     }
   }
-
   _dissociateSystemEventListener(eventName) {
     var handleEventNames;
-
     for (var key in __handleEventNames) {
       handleEventNames = __handleEventNames[key];
-
       if (handleEventNames.indexOf(eventName) > -1) {
         if (this._listenerCount[key] <= 0) delete __listenerMap[key][this._targetID];
         --__listenerCountMap[key];
-
         if (__disableCallbackMap[key] && __listenerCountMap[key] === 0) {
           __disableCallbackMap[key]();
         }
-
         break;
       }
     }
   }
+
   /**
    * Add a given listener to this event target.
    * @param {string} eventName The event name to add.
@@ -1527,17 +1341,13 @@ class EventTarget {
    * @param {boolean|{capture?:boolean,passive?:boolean,once?:boolean}} [options] The options for this listener.
    * @returns {boolean} `true` if the listener was added actually.
    */
-
-
   addEventListener(eventName, listener, options) {
     if (!listener) {
       return false;
     }
-
     if (typeof listener !== "function" && !isObject(listener)) {
       throw new TypeError("'listener' should be a function or an object.");
     }
-
     const listeners = this._listeners;
     const optionsIsObj = isObject(options);
     const capture = optionsIsObj ? Boolean(options.capture) : Boolean(options);
@@ -1548,38 +1358,33 @@ class EventTarget {
       passive: optionsIsObj && Boolean(options.passive),
       once: optionsIsObj && Boolean(options.once),
       next: null
-    }; // Set it as the first node if the first node is null.
+    };
 
+    // Set it as the first node if the first node is null.
     let node = listeners.get(eventName);
-
     if (node === undefined) {
       listeners.set(eventName, newNode);
-
       this._associateSystemEventListener(eventName);
-
       return true;
-    } // Traverse to the tail while checking duplication..
+    }
 
-
+    // Traverse to the tail while checking duplication..
     let prev = null;
-
     while (node) {
       if (node.listener === listener && node.listenerType === listenerType) {
         // Should ignore duplication.
         return false;
       }
-
       prev = node;
       node = node.next;
-    } // Add it.
+    }
 
-
+    // Add it.
     prev.next = newNode;
-
     this._associateSystemEventListener(eventName);
-
     return true;
   }
+
   /**
    * Remove a given listener from this event target.
    * @param {string} eventName The event name to remove.
@@ -1587,19 +1392,15 @@ class EventTarget {
    * @param {boolean|{capture?:boolean,passive?:boolean,once?:boolean}} [options] The options for this listener.
    * @returns {boolean} `true` if the listener was removed actually.
    */
-
-
   removeEventListener(eventName, listener, options) {
     if (!listener) {
       return false;
     }
-
     const listeners = this._listeners;
     const capture = isObject(options) ? Boolean(options.capture) : Boolean(options);
     const listenerType = capture ? CAPTURE : BUBBLE;
     let prev = null;
     let node = listeners.get(eventName);
-
     while (node) {
       if (node.listener === listener && node.listenerType === listenerType) {
         if (prev) {
@@ -1609,33 +1410,26 @@ class EventTarget {
         } else {
           listeners.delete(eventName);
         }
-
         this._dissociateSystemEventListener(eventName);
-
         return true;
       }
-
       prev = node;
       node = node.next;
     }
-
     return false;
   }
+
   /**
    * Dispatch a given event.
    * @param {Event|{type:string}} event The event to dispatch.
    * @returns {boolean} `false` if canceled.
    */
-
-
   dispatchEvent(event) {
     if (!event || typeof event.type !== "string") {
       throw new TypeError("\"event.type\" should be a string.");
     }
-
     const eventName = event.type;
     var onFunc = this['on' + eventName];
-
     if (onFunc && typeof onFunc === 'function') {
       event._target = event._currentTarget = this;
       onFunc.call(this, event);
@@ -1643,21 +1437,19 @@ class EventTarget {
       event._eventPhase = 0;
       event._passiveListener = null;
       if (event.defaultPrevented) return false;
-    } // If listeners aren't registered, terminate.
+    }
 
-
+    // If listeners aren't registered, terminate.
     const listeners = this._listeners;
     let node = listeners.get(eventName);
-
     if (!node) {
       return true;
     }
+    event._target = event._currentTarget = this;
 
-    event._target = event._currentTarget = this; // This doesn't process capturing phase and bubbling phase.
+    // This doesn't process capturing phase and bubbling phase.
     // This isn't participating in a tree.
-
     let prev = null;
-
     while (node) {
       // Remove this listener if it's once
       if (node.once) {
@@ -1670,65 +1462,55 @@ class EventTarget {
         }
       } else {
         prev = node;
-      } // Call this listener
+      }
 
-
+      // Call this listener
       event._passiveListener = node.passive ? node.listener : null;
-
       if (typeof node.listener === "function") {
         node.listener.call(this, event);
-      } // Break if `event.stopImmediatePropagation` was called.
+      }
 
-
+      // Break if `event.stopImmediatePropagation` was called.
       if (event._stopped) {
         break;
       }
-
       node = node.next;
     }
-
     event._target = event._currentTarget = null;
     event._eventPhase = 0;
     event._passiveListener = null;
     return !event.defaultPrevented;
   }
-
 }
-
 module.exports = EventTarget;
 
 },{}],12:[function(require,module,exports){
 "use strict";
 
 const EventTarget = require('./EventTarget');
-
 const Event = require('./Event');
-
 const jsbWindow = require('../../jsbWindow');
-
 class FileReader extends EventTarget {
   construct() {
     this.result = null;
-  } // Aborts the read operation. Upon return, the readyState will be DONE.
+  }
 
+  // Aborts the read operation. Upon return, the readyState will be DONE.
+  abort() {}
 
-  abort() {} // Starts reading the contents of the specified Blob, once finished, the result attribute contains an ArrayBuffer representing the file's data.
+  // Starts reading the contents of the specified Blob, once finished, the result attribute contains an ArrayBuffer representing the file's data.
+  readAsArrayBuffer() {}
 
-
-  readAsArrayBuffer() {} // Starts reading the contents of the specified Blob, once finished, the result attribute contains a data: URL representing the file's data.
-
-
+  // Starts reading the contents of the specified Blob, once finished, the result attribute contains a data: URL representing the file's data.
   readAsDataURL(blob) {
     this.result = `data:image/png;base64,${jsbWindow.btoa(blob)}`;
     const event = new Event('load');
     this.dispatchEvent(event);
-  } // Starts reading the contents of the specified Blob, once finished, the result attribute contains the contents of the file as a text string.
+  }
 
-
+  // Starts reading the contents of the specified Blob, once finished, the result attribute contains the contents of the file as a text string.
   readAsText() {}
-
 }
-
 module.exports = FileReader;
 
 },{"../../jsbWindow":44,"./Event":10,"./EventTarget":11}],13:[function(require,module,exports){
@@ -1745,125 +1527,92 @@ class FontFace {
       this._rejectCB = reject;
     });
   }
-
-  load() {// class FontFaceSet, add(fontFace) have done the load work
+  load() {
+    // class FontFaceSet, add(fontFace) have done the load work
   }
-
   get status() {
     return this._status;
   }
-
   get loaded() {
     return this._loaded;
   }
-
 }
-
 module.exports = FontFace;
 
 },{}],14:[function(require,module,exports){
 "use strict";
 
 const EventTarget = require('./EventTarget');
-
 const Event = require('./Event');
-
 class FontFaceSet extends EventTarget {
   constructor() {
     super();
     this._status = 'loading';
   }
-
   get status() {
     return this._status;
   }
-
   set onloading(listener) {
     this.addEventListener('loading', listener);
   }
-
   set onloadingdone(listener) {
     this.addEventListener('loadingdone', listener);
   }
-
   set onloadingerror(listener) {
     this.addEventListener('loadingerror', listener);
   }
-
   add(fontFace) {
     this._status = fontFace._status = 'loading';
-    this.dispatchEvent(new Event('loading')); // Call native binding method to set the ttf font to native platform.
-
+    this.dispatchEvent(new Event('loading'));
+    // Call native binding method to set the ttf font to native platform.
     let family = jsb.loadFont(fontFace.family, fontFace.source);
     setTimeout(() => {
       if (family) {
         fontFace._status = this._status = 'loaded';
-
         fontFace._resolveCB();
-
         this.dispatchEvent(new Event('loadingdone'));
       } else {
         fontFace._status = this._status = 'error';
-
         fontFace._rejectCB();
-
         this.dispatchEvent(new Event('loadingerror'));
       }
     }, 0);
   }
-
   clear() {}
-
   delete() {}
-
   load() {}
-
   ready() {}
-
 }
-
 module.exports = FontFaceSet;
 
 },{"./Event":10,"./EventTarget":11}],15:[function(require,module,exports){
 "use strict";
 
 const HTMLElement = require('./HTMLElement');
-
 const ImageData = require('./ImageData');
-
 const DOMRect = require('./DOMRect');
-
 const CanvasRenderingContext2D = require('./CanvasRenderingContext2D');
-
 const jsbWindow = require('../../jsbWindow');
-
 const clamp = function (value) {
   value = Math.round(value);
   return value < 0 ? 0 : value < 255 ? value : 255;
 };
-
 class CanvasGradient {
   constructor() {
     console.log('==> CanvasGradient constructor');
   }
-
   addColorStop(offset, color) {
     console.log('==> CanvasGradient addColorStop');
   }
-
 }
-
 class TextMetrics {
   constructor(width) {
     this._width = width;
   }
-
   get width() {
     return this._width;
   }
-
 }
-
 class HTMLCanvasElement extends HTMLElement {
   constructor(width, height) {
     super('canvas');
@@ -1875,118 +1624,91 @@ class HTMLCanvasElement extends HTMLElement {
     this._height = height ? Math.ceil(height) : 0;
     this._context2D = null;
     this._dataInner = null;
-  } //REFINE: implement opts.
+  }
 
-
+  //REFINE: implement opts.
   getContext(name, opts) {
     const self = this;
-
     if (name === '2d') {
       if (!this._context2D) {
         this._context2D = new CanvasRenderingContext2D(this._width, this._height);
         this._context2D._canvas = this;
-
         this._context2D._setCanvasBufferUpdatedCallback(data => {
           // FIXME: Canvas's data will take 2x memory size, one in C++, another is obtained by Uint8Array here.
           self._dataInner = new ImageData(data, self._width, self._height);
         });
       }
-
       return this._context2D;
     }
-
     return null;
   }
-
   get _data() {
     if (this._context2D === null) {
       return null;
     }
-
     if (!this._dataInner) {
       this._context2D.fetchData();
     }
-
     return this._dataInner;
   }
-
   set _data(data) {
     this._dataInner = data;
   }
-
   set width(width) {
     width = Math.ceil(width);
-
     if (this._width !== width) {
       this._dataInner = null;
       this._width = width;
-
       if (this._context2D) {
         this._context2D.width = width;
       }
     }
   }
-
   get width() {
     return this._width;
   }
-
   set height(height) {
     height = Math.ceil(height);
-
     if (this._height !== height) {
       this._dataInner = null;
       this._height = height;
-
       if (this._context2D) {
         this._context2D.height = height;
       }
     }
   }
-
   get height() {
     return this._height;
   }
-
   get clientWidth() {
     return jsbWindow.innerWidth;
   }
-
   get clientHeight() {
     return jsbWindow.innerHeight;
   }
-
   get data() {
     if (this._data) {
       return this._data.data;
     }
-
     return null;
   }
-
   getBoundingClientRect() {
     return new DOMRect(0, 0, jsbWindow.innerWidth, jsbWindow.innerHeight);
   }
-
   requestPointerLock() {
     jsb.setCursorEnabled(false);
   }
-
 }
-
 module.exports = HTMLCanvasElement;
 
 },{"../../jsbWindow":44,"./CanvasRenderingContext2D":6,"./DOMRect":7,"./HTMLElement":16,"./ImageData":22}],16:[function(require,module,exports){
 "use strict";
 
 const Element = require('./Element');
-
 const {
   noop
 } = require('./util');
-
 const jsbWindow = require('../../jsbWindow');
-
 class HTMLElement extends Element {
   constructor(tagName = '') {
     super();
@@ -2000,40 +1722,31 @@ class HTMLElement extends Element {
     this.innerHTML = '';
     this.parentElement = jsbWindow.__canvas;
   }
-
   setAttribute(name, value) {
     this[name] = value;
   }
-
   getAttribute(name) {
     return this[name];
   }
-
   focus() {}
-
 }
-
 module.exports = HTMLElement;
 
 },{"../../jsbWindow":44,"./Element":9,"./util":33}],17:[function(require,module,exports){
 "use strict";
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return typeof key === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (typeof input !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (typeof res !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 const HTMLElement = require('./HTMLElement');
-
 const Event = require('./Event');
-
 class HTMLImageElement extends HTMLElement {
   constructor(width, height, isCalledFromImage) {
     if (!isCalledFromImage) {
       throw new TypeError("Illegal constructor, use 'new Image(w, h); instead!'");
     }
-
     super('img');
-
     _defineProperty(this, "_mipmapLevelDataSize", []);
-
     this.width = width ? width : 0;
     this.height = height ? height : 0;
     this._data = null;
@@ -2041,16 +1754,13 @@ class HTMLImageElement extends HTMLElement {
     this.complete = false;
     this.crossOrigin = null;
   }
-
   destroy() {
     if (this._data) {
       jsb.destroyImage(this._data);
       this._data = null;
     }
-
     this._src = null;
   }
-
   set src(src) {
     this._src = src;
     if (src === '') return;
@@ -2061,7 +1771,6 @@ class HTMLImageElement extends HTMLElement {
         this.dispatchEvent(event);
         return;
       }
-
       this.width = this.naturalWidth = info.width;
       this.height = this.naturalHeight = info.height;
       this._data = info.data;
@@ -2071,40 +1780,31 @@ class HTMLImageElement extends HTMLElement {
       this.dispatchEvent(event);
     });
   }
-
   get src() {
     return this._src;
   }
-
   get clientWidth() {
     return this.width;
   }
-
   get clientHeight() {
     return this.height;
   }
-
   getBoundingClientRect() {
     return new DOMRect(0, 0, this.width, this.height);
   }
-
 }
-
 module.exports = HTMLImageElement;
 
 },{"./Event":10,"./HTMLElement":16}],18:[function(require,module,exports){
 "use strict";
 
 const HTMLElement = require('./HTMLElement');
-
 const MediaError = require('./MediaError');
-
 const HAVE_NOTHING = 0;
 const HAVE_METADATA = 1;
 const HAVE_CURRENT_DATA = 2;
 const HAVE_FUTURE_DATA = 3;
 const HAVE_ENOUGH_DATA = 4;
-
 class HTMLMediaElement extends HTMLElement {
   constructor(type) {
     super(type);
@@ -2115,73 +1815,52 @@ class HTMLMediaElement extends HTMLElement {
     this._readyState = HAVE_NOTHING;
     this._error = new MediaError();
   }
-
   addTextTrack() {}
-
   captureStream() {}
-
   fastSeek() {}
-
   load() {}
-
   pause() {}
-
   play() {}
-
   canPlayType(mediaType) {
     return '';
   }
-
   set volume(volume) {
     this._volume = volume;
   }
-
   get volume() {
     return this._volume;
   }
-
   get duration() {
     return this._duration;
   }
-
   get ended() {
     return this._isEnded;
   }
-
   get muted() {
     return this._isMute;
   }
-
   get readyState() {
     return this._readyState;
   }
-
   get error() {
     return this._error;
   }
-
   get currentTime() {
     return 0;
   }
-
 }
-
 module.exports = HTMLMediaElement;
 
 },{"./HTMLElement":16,"./MediaError":24}],19:[function(require,module,exports){
 "use strict";
 
 const HTMLElement = require('./HTMLElement');
-
 const Event = require('./Event');
-
 const _importmaps = [];
-
 class HTMLScriptElement extends HTMLElement {
   constructor(width, height) {
     super('script');
   }
-
   set type(type) {
     if (type === "systemjs-importmap") {
       if (_importmaps.indexOf(this) === -1) {
@@ -2189,54 +1868,42 @@ class HTMLScriptElement extends HTMLElement {
       }
     }
   }
-
   set src(url) {
     setTimeout(() => {
       require(url);
-
       this.dispatchEvent(new Event('load'));
     }, 0);
   }
-
 }
-
 HTMLScriptElement._getAllScriptElementsSystemJSImportType = function () {
   return _importmaps;
 };
-
 module.exports = HTMLScriptElement;
 
 },{"./Event":10,"./HTMLElement":16}],20:[function(require,module,exports){
 "use strict";
 
 const HTMLMediaElement = require('./HTMLMediaElement');
-
 class HTMLVideoElement extends HTMLMediaElement {
   constructor() {
     super('video');
   }
-
   canPlayType(type) {
     if (type === 'video/mp4') return true;
     return false;
   }
-
 }
-
 module.exports = HTMLVideoElement;
 
 },{"./HTMLMediaElement":18}],21:[function(require,module,exports){
 "use strict";
 
 let HTMLImageElement = require('./HTMLImageElement');
-
 class Image extends HTMLImageElement {
   constructor(width, height) {
     super(width, height, true);
   }
-
 }
-
 module.exports = Image;
 
 },{"./HTMLImageElement":17}],22:[function(require,module,exports){
@@ -2251,38 +1918,30 @@ class ImageData {
       width = array;
       array = null;
     }
-
     if (array === null) {
       this._data = new Uint8ClampedArray(width * height * 4);
     } else {
       this._data = array;
     }
-
     this._width = width;
     this._height = height;
   }
-
   get data() {
     return this._data;
   }
-
   get width() {
     return this._width;
   }
-
   get height() {
     return this._height;
   }
-
 }
-
 module.exports = ImageData;
 
 },{}],23:[function(require,module,exports){
 "use strict";
 
 const Event = require('./Event');
-
 const __numberShiftMap = {
   '48': ')',
   // 0
@@ -2303,14 +1962,12 @@ const __numberShiftMap = {
   '56': '*',
   // 8
   '57': '(' // 9
-
 };
-var __capsLockActive = false;
 
+var __capsLockActive = false;
 class KeyboardEvent extends Event {
   constructor(type, KeyboardEventInit) {
     super(type);
-
     if (typeof KeyboardEventInit === 'object') {
       this._altKeyActive = KeyboardEventInit.altKey ? KeyboardEventInit.altKey : false;
       this._ctrlKeyActive = KeyboardEventInit.ctrlKey ? KeyboardEventInit.ctrlKey : false;
@@ -2326,9 +1983,7 @@ class KeyboardEvent extends Event {
       this._keyCode = -1;
       this._repeat = false;
     }
-
     var keyCode = this._keyCode;
-
     if (keyCode >= 48 && keyCode <= 57) {
       // 0 ~ 9
       var number = keyCode - 48;
@@ -2350,7 +2005,6 @@ class KeyboardEvent extends Event {
       // a ~ z
       var charCode = String.fromCharCode(keyCode);
       this._keyCode = keyCode - (97 - 65); // always return uppercase keycode for backward-compatibility
-
       this._code = 'Key' + charCode;
       this._key = this._shiftKeyActive ^ __capsLockActive ? charCode.toUpperCase() : charCode;
     } else if (keyCode >= 112 && keyCode <= 123) {
@@ -2393,7 +2047,6 @@ class KeyboardEvent extends Event {
       this._key = 'Control';
     } else if (keyCode === 20017) {
       this._keyCode = 17; // Reset to the real value.
-
       this._code = 'ControlRight';
       this._key = 'Control';
     } else if (keyCode === 16) {
@@ -2401,7 +2054,6 @@ class KeyboardEvent extends Event {
       this._key = 'Shift';
     } else if (keyCode === 20016) {
       this._keyCode = 16; // Reset to the real value.
-
       this._code = 'ShiftRight';
       this._key = 'Shift';
     } else if (keyCode === 18) {
@@ -2409,7 +2061,6 @@ class KeyboardEvent extends Event {
       this._key = 'Alt';
     } else if (keyCode === 20018) {
       this._keyCode = 18; // Reset to the real value.
-
       this._code = 'AltRight';
       this._key = 'Alt';
     } else if (keyCode === 91) {
@@ -2428,7 +2079,6 @@ class KeyboardEvent extends Event {
       this._code = this._key = 'ArrowDown';
     } else if (keyCode === 20093) {
       this._keyCode = 93; // Bug of brower since its keycode is the same as MetaRight.
-
       this._code = this._key = 'ContextMenu';
     } else if (keyCode === 20013) {
       this._keyCode = 13;
@@ -2478,71 +2128,67 @@ class KeyboardEvent extends Event {
       this._key = '.';
     } else if (keyCode === 20) {
       this._code = this._key = 'CapsLock';
-
       if (type === 'keyup') {
         __capsLockActive = !__capsLockActive;
       }
     } else {
       console.log("Unknown keyCode: " + this._keyCode);
     }
-  } // Returns a Boolean indicating if the modifier key, like Alt, Shift, Ctrl, or Meta, was pressed when the event was created.
+  }
 
-
+  // Returns a Boolean indicating if the modifier key, like Alt, Shift, Ctrl, or Meta, was pressed when the event was created.
   getModifierState() {
     return false;
-  } // Returns a Boolean that is true if the Alt ( Option or ⌥ on OS X) key was active when the key event was generated.
+  }
 
-
+  // Returns a Boolean that is true if the Alt ( Option or ⌥ on OS X) key was active when the key event was generated.
   get altKey() {
     return this._altKeyActive;
-  } // Returns a DOMString with the code value of the key represented by the event.
+  }
 
-
+  // Returns a DOMString with the code value of the key represented by the event.
   get code() {
     return this._code;
-  } // Returns a Boolean that is true if the Ctrl key was active when the key event was generated.
+  }
 
-
+  // Returns a Boolean that is true if the Ctrl key was active when the key event was generated.
   get ctrlKey() {
     return this._ctrlKeyActive;
-  } // Returns a Boolean that is true if the event is fired between after compositionstart and before compositionend.
+  }
 
-
+  // Returns a Boolean that is true if the event is fired between after compositionstart and before compositionend.
   get isComposing() {
     return false;
-  } // Returns a DOMString representing the key value of the key represented by the event.
+  }
 
-
+  // Returns a DOMString representing the key value of the key represented by the event.
   get key() {
     return this._key;
   }
-
   get keyCode() {
     return this._keyCode;
-  } // Returns a Number representing the location of the key on the keyboard or other input device.
+  }
 
-
+  // Returns a Number representing the location of the key on the keyboard or other input device.
   get location() {
     return 0;
-  } // Returns a Boolean that is true if the Meta key (on Mac keyboards, the ⌘ Command key; on Windows keyboards, the Windows key (⊞)) was active when the key event was generated.
+  }
 
-
+  // Returns a Boolean that is true if the Meta key (on Mac keyboards, the ⌘ Command key; on Windows keyboards, the Windows key (⊞)) was active when the key event was generated.
   get metaKey() {
     return this._metaKeyActive;
-  } // Returns a Boolean that is true if the key is being held down such that it is automatically repeating.
+  }
 
-
+  // Returns a Boolean that is true if the key is being held down such that it is automatically repeating.
   get repeat() {
     return this._repeat;
-  } // Returns a Boolean that is true if the Shift key was active when the key event was generated.
+  }
 
-
+  // Returns a Boolean that is true if the Shift key was active when the key event was generated.
   get shiftKey() {
     return this._shiftKeyActive;
   }
-
 }
-
 module.exports = KeyboardEvent;
 
 },{"./Event":10}],24:[function(require,module,exports){
@@ -2552,27 +2198,21 @@ const MEDIA_ERR_ABORTED = 1;
 const MEDIA_ERR_NETWORK = 2;
 const MEDIA_ERR_DECODE = 3;
 const MEDIA_ERR_SRC_NOT_SUPPORTED = 4;
-
 class MediaError {
   constructor() {}
-
   get code() {
     return MEDIA_ERR_ABORTED;
   }
-
   get message() {
     return "";
   }
-
 }
-
 module.exports = MediaError;
 
 },{}],25:[function(require,module,exports){
 "use strict";
 
 const Event = require('./Event');
-
 class MouseEvent extends Event {
   constructor(type, initArgs) {
     super(type);
@@ -2586,61 +2226,47 @@ class MouseEvent extends Event {
     this._pageX = initArgs.pageX;
     this._pageY = initArgs.pageY;
   }
-
   get button() {
     return this._button;
   }
-
   get which() {
     return this._which;
   }
-
   get wheelDelta() {
     return this._wheelDelta;
   }
-
   get clientX() {
     return this._clientX;
   }
-
   get clientY() {
     return this._clientY;
   }
-
   get screenX() {
     return this._screenX;
   }
-
   get screenY() {
     return this._screenY;
   }
-
   get pageX() {
     return this._pageX;
   }
-
   get pageY() {
     return this._pageY;
   }
-
 }
-
 module.exports = MouseEvent;
 
 },{"./Event":10}],26:[function(require,module,exports){
 "use strict";
 
 const EventTarget = require('./EventTarget');
-
 const jsbWindow = require('../../jsbWindow');
-
 class Node extends EventTarget {
   constructor() {
     super();
     this.childNodes = [];
     this.parentNode = jsbWindow.__canvas;
   }
-
   appendChild(node) {
     if (node instanceof Node) {
       this.childNodes.push(node);
@@ -2648,46 +2274,36 @@ class Node extends EventTarget {
       throw new TypeError('Failed to executed \'appendChild\' on \'Node\': parameter 1 is not of type \'Node\'.');
     }
   }
-
   insertBefore(newNode, referenceNode) {
     //REFINE:
     return newNode;
   }
-
   replaceChild(newChild, oldChild) {
     //REFINE:
     return oldChild;
   }
-
   cloneNode() {
     const copyNode = Object.create(this);
     Object.assign(copyNode, this);
     return copyNode;
   }
-
   removeChild(node) {
     const index = this.childNodes.findIndex(child => child === node);
-
     if (index > -1) {
       return this.childNodes.splice(index, 1);
     }
-
     return null;
   }
-
   contains(node) {
     return this.childNodes.indexOf(node) > -1;
   }
-
 }
-
 module.exports = Node;
 
 },{"../../jsbWindow":44,"./EventTarget":11}],27:[function(require,module,exports){
 "use strict";
 
 const Event = require('./Event');
-
 class TouchEvent extends Event {
   constructor(type, touchEventInit) {
     super(type);
@@ -2695,30 +2311,20 @@ class TouchEvent extends Event {
     this.targetTouches = [];
     this.changedTouches = [];
   }
-
 }
-
 module.exports = TouchEvent;
 
 },{"./Event":10}],28:[function(require,module,exports){
 "use strict";
 
 const HTMLElement = require('./HTMLElement');
-
 const Image = require('./Image');
-
 const HTMLCanvasElement = require('./HTMLCanvasElement');
-
 const HTMLVideoElement = require('./HTMLVideoElement');
-
 const HTMLScriptElement = require('./HTMLScriptElement');
-
 const Node = require('./Node');
-
 const FontFaceSet = require('./FontFaceSet');
-
 const jsbWindow = require('../../jsbWindow');
-
 class Document extends Node {
   constructor() {
     super();
@@ -2733,11 +2339,9 @@ class Document extends Node {
     this.fonts = new FontFaceSet();
     this.scripts = [];
   }
-
   createElementNS(namespaceURI, qualifiedName, options) {
     return this.createElement(qualifiedName);
   }
-
   createElement(tagName) {
     if (tagName === 'canvas') {
       return new HTMLCanvasElement(1, 1);
@@ -2748,18 +2352,14 @@ class Document extends Node {
     } else if (tagName === 'script') {
       return new HTMLScriptElement();
     }
-
     return new HTMLElement(tagName);
   }
-
   getElementById(id) {
     if (id === jsbWindow.__canvas.id || id === 'canvas') {
       return jsbWindow.__canvas;
     }
-
     return new HTMLElement(id);
   }
-
   getElementsByTagName(tagName) {
     if (tagName === 'head') {
       return [document.head];
@@ -2768,10 +2368,8 @@ class Document extends Node {
     } else if (tagName === 'canvas') {
       return [jsbWindow.__canvas];
     }
-
     return [new HTMLElement(tagName)];
   }
-
   getElementsByName(tagName) {
     if (tagName === 'head') {
       return [document.head];
@@ -2780,10 +2378,8 @@ class Document extends Node {
     } else if (tagName === 'canvas') {
       return [jsbWindow.__canvas];
     }
-
     return [new HTMLElement(tagName)];
   }
-
   querySelector(query) {
     if (query === 'head') {
       return document.head;
@@ -2794,10 +2390,8 @@ class Document extends Node {
     } else if (query === `#${jsbWindow.__canvas.id}`) {
       return jsbWindow.__canvas;
     }
-
     return new HTMLElement(query);
   }
-
   querySelectorAll(query) {
     if (query === 'head') {
       return [document.head];
@@ -2808,32 +2402,24 @@ class Document extends Node {
     } else if (query.startsWith('script[type="systemjs-importmap"]')) {
       return HTMLScriptElement._getAllScriptElementsSystemJSImportType();
     }
-
     return [new HTMLElement(query)];
   }
-
   createTextNode() {
     return new HTMLElement('text');
   }
-
   elementFromPoint() {
     return jsbWindow.canvas;
   }
-
   createEvent(type) {
     if (jsbWindow[type]) {
       return new jsbWindow[type]();
     }
-
     return null;
   }
-
   exitPointerLock() {
     jsb.setCursorEnabled(true);
   }
-
 }
-
 let document = new Document();
 module.exports = document;
 
@@ -2843,11 +2429,11 @@ module.exports = document;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.DOMException = void 0;
 exports.Headers = Headers;
 exports.Request = Request;
 exports.Response = Response;
 exports.fetch = fetch;
-exports.DOMException = void 0;
 const self = globalThis;
 const support = {
   searchParams: 'URLSearchParams' in self,
@@ -2857,40 +2443,32 @@ const support = {
   formData: 'FormData' in self,
   arrayBuffer: 'ArrayBuffer' in self
 };
-
 function isDataView(obj) {
   return obj && DataView.prototype.isPrototypeOf(obj);
 }
-
 if (support.arrayBuffer) {
   const viewClasses = ['[object Int8Array]', '[object Uint8Array]', '[object Uint8ClampedArray]', '[object Int16Array]', '[object Uint16Array]', '[object Int32Array]', '[object Uint32Array]', '[object Float32Array]', '[object Float64Array]'];
-
   var isArrayBufferView = ArrayBuffer.isView || function (obj) {
     return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1;
   };
 }
-
 function normalizeName(name) {
   if (typeof name !== 'string') {
     name = String(name);
   }
-
   if (/[^a-z0-9\-#$%&'*+.^_`|~]/i.test(name) || name === '') {
     throw new TypeError('Invalid character in header field name');
   }
-
   return name.toLowerCase();
 }
-
 function normalizeValue(value) {
   if (typeof value !== 'string') {
     value = String(value);
   }
-
   return value;
-} // Build a destructive iterator for the value list
+}
 
-
+// Build a destructive iterator for the value list
 function iteratorFor(items) {
   const iterator = {
     next() {
@@ -2900,21 +2478,16 @@ function iteratorFor(items) {
         value
       };
     }
-
   };
-
   if (support.iterable) {
     iterator[Symbol.iterator] = function () {
       return iterator;
     };
   }
-
   return iterator;
 }
-
 function Headers(headers) {
   this.map = {};
-
   if (headers instanceof Headers) {
     headers.forEach(function (value, name) {
       this.append(name, value);
@@ -2929,31 +2502,25 @@ function Headers(headers) {
     }, this);
   }
 }
-
 Headers.prototype.append = function (name, value) {
   name = normalizeName(name);
   value = normalizeValue(value);
   const oldValue = this.map[name];
   this.map[name] = oldValue ? `${oldValue}, ${value}` : value;
 };
-
 Headers.prototype.delete = function (name) {
   delete this.map[normalizeName(name)];
 };
-
 Headers.prototype.get = function (name) {
   name = normalizeName(name);
   return this.has(name) ? this.map[name] : null;
 };
-
 Headers.prototype.has = function (name) {
   return this.map.hasOwnProperty(normalizeName(name));
 };
-
 Headers.prototype.set = function (name, value) {
   this.map[normalizeName(name)] = normalizeValue(value);
 };
-
 Headers.prototype.forEach = function (callback, thisArg) {
   for (const name in this.map) {
     if (this.map.hasOwnProperty(name)) {
@@ -2961,7 +2528,6 @@ Headers.prototype.forEach = function (callback, thisArg) {
     }
   }
 };
-
 Headers.prototype.keys = function () {
   const items = [];
   this.forEach((value, name) => {
@@ -2969,7 +2535,6 @@ Headers.prototype.keys = function () {
   });
   return iteratorFor(items);
 };
-
 Headers.prototype.values = function () {
   const items = [];
   this.forEach(value => {
@@ -2977,7 +2542,6 @@ Headers.prototype.values = function () {
   });
   return iteratorFor(items);
 };
-
 Headers.prototype.entries = function () {
   const items = [];
   this.forEach((value, name) => {
@@ -2985,56 +2549,45 @@ Headers.prototype.entries = function () {
   });
   return iteratorFor(items);
 };
-
 if (support.iterable) {
   Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
 }
-
 function consumed(body) {
   if (body.bodyUsed) {
     return Promise.reject(new TypeError('Already read'));
   }
-
   body.bodyUsed = true;
 }
-
 function fileReaderReady(reader) {
   return new Promise((resolve, reject) => {
     reader.onload = function () {
       resolve(reader.result);
     };
-
     reader.onerror = function () {
       reject(reader.error);
     };
   });
 }
-
 function readBlobAsArrayBuffer(blob) {
   const reader = new FileReader();
   const promise = fileReaderReady(reader);
   reader.readAsArrayBuffer(blob);
   return promise;
 }
-
 function readBlobAsText(blob) {
   const reader = new FileReader();
   const promise = fileReaderReady(reader);
   reader.readAsText(blob);
   return promise;
 }
-
 function readArrayBufferAsText(buf) {
   const view = new Uint8Array(buf);
   const chars = new Array(view.length);
-
   for (let i = 0; i < view.length; i++) {
     chars[i] = String.fromCharCode(view[i]);
   }
-
   return chars.join('');
 }
-
 function bufferClone(buf) {
   if (buf.slice) {
     return buf.slice(0);
@@ -3044,13 +2597,10 @@ function bufferClone(buf) {
     return view.buffer;
   }
 }
-
 function Body() {
   this.bodyUsed = false;
-
   this._initBody = function (body) {
     this._bodyInit = body;
-
     if (!body) {
       this._bodyText = '';
     } else if (typeof body === 'string') {
@@ -3062,15 +2612,14 @@ function Body() {
     } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
       this._bodyText = body.toString();
     } else if (support.arrayBuffer && support.blob && isDataView(body)) {
-      this._bodyArrayBuffer = bufferClone(body.buffer); // IE 10-11 can't handle a DataView body.
-
+      this._bodyArrayBuffer = bufferClone(body.buffer);
+      // IE 10-11 can't handle a DataView body.
       this._bodyInit = new Blob([this._bodyArrayBuffer]);
     } else if (support.arrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
       this._bodyArrayBuffer = bufferClone(body);
     } else {
       this._bodyText = body = Object.prototype.toString.call(body);
     }
-
     if (!this.headers.get('content-type')) {
       if (typeof body === 'string') {
         this.headers.set('content-type', 'text/plain;charset=UTF-8');
@@ -3081,15 +2630,12 @@ function Body() {
       }
     }
   };
-
   if (support.blob) {
     this.blob = function () {
       const rejected = consumed(this);
-
       if (rejected) {
         return rejected;
       }
-
       if (this._bodyBlob) {
         return Promise.resolve(this._bodyBlob);
       } else if (this._bodyArrayBuffer) {
@@ -3100,7 +2646,6 @@ function Body() {
         return Promise.resolve(new Blob([this._bodyText]));
       }
     };
-
     this.arrayBuffer = function () {
       if (this._bodyArrayBuffer) {
         return consumed(this) || Promise.resolve(this._bodyArrayBuffer);
@@ -3109,14 +2654,11 @@ function Body() {
       }
     };
   }
-
   this.text = function () {
     const rejected = consumed(this);
-
     if (rejected) {
       return rejected;
     }
-
     if (this._bodyBlob) {
       return readBlobAsText(this._bodyBlob);
     } else if (this._bodyArrayBuffer) {
@@ -3127,48 +2669,38 @@ function Body() {
       return Promise.resolve(this._bodyText);
     }
   };
-
   if (support.formData) {
     this.formData = function () {
       return this.text().then(decode);
     };
   }
-
   this.json = function () {
     return this.text().then(JSON.parse);
   };
-
   return this;
-} // HTTP methods whose capitalization should be normalized
+}
 
-
-const methods = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'];
-
+// HTTP methods whose capitalization should be normalized
+const methods = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'PATCH'];
 function normalizeMethod(method) {
   const upcased = method.toUpperCase();
   return methods.indexOf(upcased) > -1 ? upcased : method;
 }
-
 function Request(input, options) {
   options = options || {};
   let body = options.body;
-
   if (input instanceof Request) {
     if (input.bodyUsed) {
       throw new TypeError('Already read');
     }
-
     this.url = input.url;
     this.credentials = input.credentials;
-
     if (!options.headers) {
       this.headers = new Headers(input.headers);
     }
-
     this.method = input.method;
     this.mode = input.mode;
     this.signal = input.signal;
-
     if (!body && input._bodyInit != null) {
       body = input._bodyInit;
       input.bodyUsed = true;
@@ -3176,31 +2708,24 @@ function Request(input, options) {
   } else {
     this.url = String(input);
   }
-
   this.credentials = options.credentials || this.credentials || 'same-origin';
-
   if (options.headers || !this.headers) {
     this.headers = new Headers(options.headers);
   }
-
   this.method = normalizeMethod(options.method || this.method || 'GET');
   this.mode = options.mode || this.mode || null;
   this.signal = options.signal || this.signal;
   this.referrer = null;
-
   if ((this.method === 'GET' || this.method === 'HEAD') && body) {
     throw new TypeError('Body not allowed for GET or HEAD requests');
   }
-
   this._initBody(body);
 }
-
 Request.prototype.clone = function () {
   return new Request(this, {
     body: this._bodyInit
   });
 };
-
 function decode(body) {
   const form = new FormData();
   body.trim().split('&').forEach(bytes => {
@@ -3213,16 +2738,14 @@ function decode(body) {
   });
   return form;
 }
-
 function parseHeaders(rawHeaders) {
-  const headers = new Headers(); // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
+  const headers = new Headers();
+  // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
   // https://tools.ietf.org/html/rfc7230#section-3.2
-
   const preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');
   preProcessedHeaders.split(/\r?\n/).forEach(line => {
     const parts = line.split(':');
     const key = parts.shift().trim();
-
     if (key) {
       const value = parts.join(':').trim();
       headers.append(key, value);
@@ -3230,26 +2753,20 @@ function parseHeaders(rawHeaders) {
   });
   return headers;
 }
-
 Body.call(Request.prototype);
-
 function Response(bodyInit, options) {
   if (!options) {
     options = {};
   }
-
   this.type = 'default';
   this.status = options.status === undefined ? 200 : options.status;
   this.ok = this.status >= 200 && this.status < 300;
   this.statusText = 'statusText' in options ? options.statusText : 'OK';
   this.headers = new Headers(options.headers);
   this.url = options.url || '';
-
   this._initBody(bodyInit);
 }
-
 Body.call(Response.prototype);
-
 Response.prototype.clone = function () {
   return new Response(this._bodyInit, {
     status: this.status,
@@ -3258,7 +2775,6 @@ Response.prototype.clone = function () {
     url: this.url
   });
 };
-
 Response.error = function () {
   const response = new Response(null, {
     status: 0,
@@ -3267,14 +2783,11 @@ Response.error = function () {
   response.type = 'error';
   return response;
 };
-
 const redirectStatuses = [301, 302, 303, 307, 308];
-
 Response.redirect = function (url, status) {
   if (redirectStatuses.indexOf(status) === -1) {
     throw new RangeError('Invalid status code');
   }
-
   return new Response(null, {
     status,
     headers: {
@@ -3282,10 +2795,8 @@ Response.redirect = function (url, status) {
     }
   });
 };
-
 var DOMException = self.DOMException;
 exports.DOMException = DOMException;
-
 try {
   new DOMException();
 } catch (err) {
@@ -3295,25 +2806,19 @@ try {
     const error = Error(message);
     this.stack = error.stack;
   };
-
   DOMException.prototype = Object.create(Error.prototype);
   DOMException.prototype.constructor = DOMException;
 }
-
 function fetch(input, init) {
   return new Promise((resolve, reject) => {
     const request = new Request(input, init);
-
     if (request.signal && request.signal.aborted) {
       return reject(new DOMException('Aborted', 'AbortError'));
     }
-
     const xhr = new XMLHttpRequest();
-
     function abortXhr() {
       xhr.abort();
     }
-
     xhr.onload = function () {
       const options = {
         status: xhr.status,
@@ -3324,38 +2829,29 @@ function fetch(input, init) {
       const body = 'response' in xhr ? xhr.response : xhr.responseText;
       resolve(new Response(body, options));
     };
-
     xhr.onerror = function () {
       reject(new TypeError('Network request failed'));
     };
-
     xhr.ontimeout = function () {
       reject(new TypeError('Network request failed'));
     };
-
     xhr.onabort = function () {
       reject(new DOMException('Aborted', 'AbortError'));
     };
-
     xhr.open(request.method, request.url, true);
-
     if (request.credentials === 'include') {
       xhr.withCredentials = true;
     } else if (request.credentials === 'omit') {
       xhr.withCredentials = false;
     }
-
     if ('responseType' in xhr && support.blob) {
       xhr.responseType = 'blob';
     }
-
     request.headers.forEach((value, name) => {
       xhr.setRequestHeader(name, value);
     });
-
     if (request.signal) {
       request.signal.addEventListener('abort', abortXhr);
-
       xhr.onreadystatechange = function () {
         // DONE (success or failure)
         if (xhr.readyState === 4) {
@@ -3363,11 +2859,9 @@ function fetch(input, init) {
         }
       };
     }
-
     xhr.send(typeof request._bodyInit === 'undefined' ? null : request._bodyInit);
   });
 }
-
 fetch.polyfill = true;
 
 },{}],30:[function(require,module,exports){
@@ -3384,9 +2878,7 @@ const location = {
   search: '',
   hash: '',
   protocol: '',
-
   reload() {}
-
 };
 module.exports = location;
 
@@ -3396,7 +2888,6 @@ module.exports = location;
 let {
   noop
 } = require('./util');
-
 const navigator = {
   platform: __getOS(),
   language: __getCurrentLanguage(),
@@ -3404,28 +2895,27 @@ const navigator = {
   userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Mobile/14E8301 NetType/WIFI Language/zh_CN',
   onLine: true,
   //FIXME:
+
   geolocation: {
     getCurrentPosition: noop,
     watchPosition: noop,
     clearWatch: noop
   },
   maxTouchPoints: 10 //FIXME: getting the number from OS.
-
 };
+
 module.exports = navigator;
 
 },{"./util":33}],33:[function(require,module,exports){
 "use strict";
 
 function noop() {}
-
 module.exports = noop;
 
 },{}],34:[function(require,module,exports){
 "use strict";
 
 const jsbWindow = require('../../jsbWindow');
-
 function inject() {
   jsbWindow.ontouchstart = null;
   jsbWindow.ontouchmove = null;
@@ -3435,12 +2925,13 @@ function inject() {
   jsbWindow.outerWidth = jsbWindow.innerWidth;
   jsbWindow.outerHeight = jsbWindow.innerHeight;
   jsbWindow.clientWidth = jsbWindow.innerWidth;
-  jsbWindow.clientHeight = jsbWindow.innerHeight; // if (!__EDITOR__) {
-
+  jsbWindow.clientHeight = jsbWindow.innerHeight;
+  // if (!__EDITOR__) {
   jsbWindow.top = jsbWindow.parent = jsbWindow;
   jsbWindow.location = require('./location');
   jsbWindow.document = require('./document');
-  jsbWindow.navigator = require('./navigator'); // }
+  jsbWindow.navigator = require('./navigator');
+  // }
 
   jsbWindow.CanvasRenderingContext2D = require('./CanvasRenderingContext2D');
   jsbWindow.Element = require('./Element');
@@ -3462,35 +2953,32 @@ function inject() {
   jsbWindow.TouchEvent = require('./TouchEvent');
   jsbWindow.MouseEvent = require('./MouseEvent');
   jsbWindow.KeyboardEvent = require('./KeyboardEvent');
-  jsbWindow.DeviceMotionEvent = require('./DeviceMotionEvent'); // ES6
+  jsbWindow.DeviceMotionEvent = require('./DeviceMotionEvent');
 
+  // ES6
   const m_fetch = require('./fetch');
-
   jsbWindow.fetch = m_fetch.fetch;
   jsbWindow.Headers = m_fetch.Headers;
   jsbWindow.Request = m_fetch.Request;
-  jsbWindow.Response = m_fetch.Response; // const PORTRAIT = 0;
+  jsbWindow.Response = m_fetch.Response;
+
+  // const PORTRAIT = 0;
   // const LANDSCAPE_LEFT = -90;
   // const PORTRAIT_UPSIDE_DOWN = 180;
   // const LANDSCAPE_RIGHT = 90;
+  jsbWindow.orientation = jsb.device.getDeviceOrientation();
 
-  jsbWindow.orientation = jsb.device.getDeviceOrientation(); // jsb.window.devicePixelRatio is readonly
-
+  // jsb.window.devicePixelRatio is readonly
   if (!__EDITOR__) {
     Object.defineProperty(jsbWindow, 'devicePixelRatio', {
       get() {
         return jsb.device.getDevicePixelRatio ? jsb.device.getDevicePixelRatio() : 1;
       },
-
-      set(_dpr) {
-        /* ignore */
-      },
-
+      set(_dpr) {/* ignore */},
       enumerable: true,
       configurable: true
     });
   }
-
   jsbWindow.screen = {
     availTop: 0,
     availLeft: 0,
@@ -3505,25 +2993,19 @@ function inject() {
     orientation: {
       //FIXME:cjh
       type: 'portrait-primary' // portrait-primary, portrait-secondary, landscape-primary, landscape-secondary
-
     },
 
     onorientationchange(event) {}
-
   };
-
   jsbWindow.addEventListener = function (eventName, listener, options) {
     jsbWindow.__canvas.addEventListener(eventName, listener, options);
   };
-
   jsbWindow.removeEventListener = function (eventName, listener, options) {
     jsbWindow.__canvas.removeEventListener(eventName, listener, options);
   };
-
   jsbWindow.dispatchEvent = function (event) {
     jsbWindow.__canvas.dispatchEvent(event);
   };
-
   jsbWindow.getComputedStyle = function (element) {
     return {
       position: 'absolute',
@@ -3532,7 +3014,6 @@ function inject() {
       height: '0px'
     };
   };
-
   jsbWindow.resize = function (width, height) {
     jsbWindow.innerWidth = width;
     jsbWindow.innerHeight = height;
@@ -3545,24 +3026,19 @@ function inject() {
     jsbWindow.screen.width = jsbWindow.innerWidth;
     jsbWindow.screen.height = jsbWindow.innerHeight;
     jsbWindow.clientWidth = jsbWindow.innerWidth;
-    jsbWindow.clientHeight = jsbWindow.innerHeight; // emit resize consistent with web behavior
-
+    jsbWindow.clientHeight = jsbWindow.innerHeight;
+    // emit resize consistent with web behavior
     const resizeEvent = new jsbWindow.Event('resize');
     resizeEvent._target = jsbWindow;
     jsbWindow.dispatchEvent(resizeEvent);
   };
-
   jsbWindow.focus = function () {};
-
   jsbWindow.scroll = function () {};
-
   jsbWindow._isInjected = true;
 }
-
 if (!jsbWindow._isInjected) {
   inject();
 }
-
 if (!__EDITOR__) {
   jsbWindow.localStorage = sys.localStorage;
 }
@@ -3580,10 +3056,10 @@ if (!__EDITOR__) {
     STOPPED: 3
   };
   jsb.AudioEngine.INVALID_AUDIO_ID = -1;
-  jsb.AudioEngine.TIME_UNKNOWN = -1; // Adapt to normal runtime based API
+  jsb.AudioEngine.TIME_UNKNOWN = -1;
 
+  // Adapt to normal runtime based API
   jsb.AudioEngine.play = jsb.AudioEngine.play2d;
-
   jsb.AudioEngine.setErrorCallback = () => {};
 })(jsb);
 
@@ -3591,30 +3067,24 @@ if (!__EDITOR__) {
 "use strict";
 
 const EventTarget = require('./jsb-adapter/EventTarget');
-
 const Event = require('./jsb-adapter/Event');
-
 const eventTarget = new EventTarget();
 const callbackWrappers = {};
 const callbacks = {};
 let index = 1;
-
 const callbackWrapper = function (cb) {
   if (!cb) {
     return null;
   }
-
   const func = function (event) {
     cb({
       value: event.text
     });
   };
-
   cb.___index = index++;
   callbackWrappers[cb.___index] = func;
   return func;
 };
-
 const getCallbackWrapper = function (cb) {
   if (cb && cb.___index) {
     const ret = callbackWrappers[cb.___index];
@@ -3624,69 +3094,55 @@ const getCallbackWrapper = function (cb) {
     return null;
   }
 };
-
 const removeListener = function (name, cb) {
   if (cb) {
     eventTarget.removeEventListener(name, getCallbackWrapper(cb));
   } else {
     // remove all listeners of name
     const cbs = callbacks[name];
-
     if (!cbs) {
       return;
     }
-
     for (let i = 0, len = cbs.length; i < len; ++i) {
       eventTarget.removeEventListener(name, cbs[i]);
     }
-
     delete callbacks[name];
   }
 };
-
 const recordCallback = function (name, cb) {
   if (!cb || !name || name === '') {
     return;
   }
-
   if (!callbacks[name]) {
     callbacks[name] = [];
   }
-
   callbacks[name].push(cb);
 };
-
 jsb.inputBox = {
   onConfirm(cb) {
     const newCb = callbackWrapper(cb);
     eventTarget.addEventListener('confirm', newCb);
     recordCallback('confirm', newCb);
   },
-
   offConfirm(cb) {
     removeListener('confirm', cb);
   },
-
   onComplete(cb) {
     const newCb = callbackWrapper(cb);
     eventTarget.addEventListener('complete', newCb);
     recordCallback('complete', newCb);
   },
-
   offComplete(cb) {
     removeListener('complete', cb);
   },
-
   onInput(cb) {
     const newCb = callbackWrapper(cb);
     eventTarget.addEventListener('input', newCb);
     recordCallback('input', newCb);
   },
-
   offInput(cb) {
     removeListener('input', cb);
   },
-
   /**
    * @param {string}		options.defaultValue
    * @param {number}		options.maxLength
@@ -3701,13 +3157,10 @@ jsb.inputBox = {
   show(options) {
     jsb.showInputBox(options);
   },
-
   hide() {
     jsb.hideInputBox();
   }
-
 };
-
 jsb.onTextInput = function (eventName, text) {
   const event = new Event(eventName);
   event.text = text;
@@ -3718,51 +3171,41 @@ jsb.onTextInput = function (eventName, text) {
 "use strict";
 
 jsb.__obj_ref_id = 0;
-
 jsb.registerNativeRef = function (owner, target) {
   if (owner && target && owner !== target) {
     let targetID = target.__jsb_ref_id;
     if (targetID === undefined) targetID = target.__jsb_ref_id = jsb.__obj_ref_id++;
     let refs = owner.__nativeRefs;
-
     if (!refs) {
       refs = owner.__nativeRefs = {};
     }
-
     refs[targetID] = target;
   }
 };
-
 jsb.unregisterNativeRef = function (owner, target) {
   if (owner && target && owner !== target) {
     let targetID = target.__jsb_ref_id;
     if (targetID === undefined) return;
     let refs = owner.__nativeRefs;
-
     if (!refs) {
       return;
     }
-
     delete refs[targetID];
   }
 };
-
 jsb.unregisterAllNativeRefs = function (owner) {
   if (!owner) return;
   delete owner.__nativeRefs;
 };
-
 jsb.unregisterChildRefsForNode = function (node, recursive) {
   recursive = !!recursive;
   let children = node.getChildren(),
-      i,
-      l,
-      child;
-
+    i,
+    l,
+    child;
   for (i = 0, l = children.length; i < l; ++i) {
     child = children[i];
     jsb.unregisterNativeRef(node, child);
-
     if (recursive) {
       jsb.unregisterChildRefsForNode(child, recursive);
     }
@@ -3790,39 +3233,30 @@ jsb.unregisterChildRefsForNode = function (node, recursive) {
     const n = this.constructor;
     return this.then(t => n.resolve(e()).then(() => t), t => n.resolve(e()).then(() => n.reject(t)));
   }
-
   function n() {}
-
   function t(e) {
     if (!(this instanceof t)) throw new TypeError('Promises must be constructed via new');
     if (typeof e !== 'function') throw new TypeError('not a function');
     this._state = 0, this._handled = !1, this._value = undefined, this._deferreds = [], u(e, this);
   }
-
   function o(e, n) {
     for (; e._state === 3;) e = e._value;
-
     e._state !== 0 ? (e._handled = !0, t._immediateFn(() => {
       const t = e._state === 1 ? n.onFulfilled : n.onRejected;
-
       if (t !== null) {
         let o;
-
         try {
           o = t(e._value);
         } catch (f) {
           return void i(n.promise, f);
         }
-
         r(n.promise, o);
       } else (e._state === 1 ? r : i)(n.promise, e._value);
     })) : e._deferreds.push(n);
   }
-
   function r(e, n) {
     try {
       if (n === e) throw new TypeError('A promise cannot be resolved with itself.');
-
       if (n && (typeof n === 'object' || typeof n === 'function')) {
         const o = n.then;
         if (n instanceof t) return e._state = 3, e._value = n, void f(e);
@@ -3832,30 +3266,23 @@ jsb.unregisterChildRefsForNode = function (node, recursive) {
           };
         }(o, n), e);
       }
-
       e._state = 1, e._value = n, f(e);
     } catch (r) {
       i(e, r);
     }
   }
-
   function i(e, n) {
     e._state = 2, e._value = n, f(e);
   }
-
   function f(e) {
     e._state === 2 && e._deferreds.length === 0 && t._immediateFn(() => {
       e._handled || t._unhandledRejectionFn(e._value);
     });
-
     for (let n = 0, r = e._deferreds.length; r > n; n++) o(e, e._deferreds[n]);
-
     e._deferreds = null;
   }
-
   function u(e, n) {
     let t = !1;
-
     try {
       e(e => {
         t || (t = !0, r(n, e));
@@ -3867,7 +3294,6 @@ jsb.unregisterChildRefsForNode = function (node, recursive) {
       t = !0, i(n, o);
     }
   }
-
   const c = setTimeout;
   t.prototype.catch = function (e) {
     return this.then(null, e);
@@ -3886,17 +3312,14 @@ jsb.unregisterChildRefsForNode = function (node, recursive) {
               o(e, n);
             }, t);
           }
-
           r[e] = f, --i == 0 && n(r);
         } catch (c) {
           t(c);
         }
       }
-
       if (!e || typeof e.length === 'undefined') throw new TypeError('Promise.all accepts an array');
       var r = Array.prototype.slice.call(e);
       if (r.length === 0) return n([]);
-
       for (var i = r.length, f = 0; r.length > f; f++) o(f, r[f]);
     });
   }, t.resolve = function (e) {
@@ -3918,14 +3341,12 @@ jsb.unregisterChildRefsForNode = function (node, recursive) {
   }, t._unhandledRejectionFn = function (e) {
     void 0 !== console && console && console.warn('Possible Unhandled Promise Rejection:', e);
   };
-
   const l = function () {
     if (typeof self !== 'undefined') return self;
     if (typeof window !== 'undefined') return window;
     if (typeof global !== 'undefined') return global;
     throw Error('unable to locate global object');
   }();
-
   'Promise' in l ? l.Promise.prototype.finally || (l.Promise.prototype.finally = e) : l.Promise = t;
 });
 
@@ -3957,29 +3378,30 @@ jsb.unregisterChildRefsForNode = function (node, recursive) {
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  */
+
 // fix: WebAssembly.instantiate not working well on V8.
 (function injectWebAssembly() {
   if (!globalThis.WebAssembly) {
     console.warn('WebAssembly is not supported!');
     return;
   }
-
   console.info('injectWebAssembly ...');
   const oldWebAssemblyInstantiate = WebAssembly.instantiate;
-
+  const oldWebAssemblyCompile = WebAssembly.compile;
   WebAssembly.compile = function (bufferSource) {
     return new Promise((resolve, reject) => {
       if (!bufferSource) {
         reject('WebAssembly.compile: Invalid buffer source!');
+      } else if (CC_EDITOR) {
+        // FIX EDITOR ERROR: WebAssembly.Compile is disallowed on the main thread, if the buffer size is larger than 4KB. Use WebAssembly.compile, or compile on a worker thread.
+        resolve(oldWebAssemblyCompile.call(WebAssembly, bufferSource));
       } else {
         resolve(new WebAssembly.Module(bufferSource));
       }
     });
   };
-
   WebAssembly.instantiate = function (bufferSourceOrModule, importObject) {
     let ret;
-
     if (bufferSourceOrModule instanceof WebAssembly.Module) {
       ret = oldWebAssemblyInstantiate(bufferSourceOrModule, importObject);
     } else {
@@ -3994,7 +3416,6 @@ jsb.unregisterChildRefsForNode = function (node, recursive) {
         }).catch(reject);
       });
     }
-
     return ret;
   };
 })();
@@ -4007,17 +3428,14 @@ function DOMParser(options) {
     locator: {}
   };
 }
-
 DOMParser.prototype.parseFromString = function (source, mimeType) {
   var options = this.options;
   var sax = new XMLReader();
   var domBuilder = options.domBuilder || new DOMHandler(); //contentHandler and LexicalHandler
-
   var errorHandler = options.errorHandler;
   var locator = options.locator;
   var defaultNSMap = options.xmlns || {};
   var isHTML = /\/x?html?$/.test(mimeType); //mimeType.toLowerCase().indexOf('html') > -1;
-
   var entityMap = isHTML ? htmlEntity.entityMap : {
     'lt': '<',
     'gt': '>',
@@ -4025,62 +3443,50 @@ DOMParser.prototype.parseFromString = function (source, mimeType) {
     'quot': '"',
     'apos': "'"
   };
-
   if (locator) {
     domBuilder.setDocumentLocator(locator);
   }
-
   sax.errorHandler = buildErrorHandler(errorHandler, domBuilder, locator);
   sax.domBuilder = options.domBuilder || domBuilder;
-
   if (isHTML) {
     defaultNSMap[''] = 'http://www.w3.org/1999/xhtml';
   }
-
   defaultNSMap.xml = defaultNSMap.xml || 'http://www.w3.org/XML/1998/namespace';
-
   if (source) {
     sax.parse(source, defaultNSMap, entityMap);
   } else {
     sax.errorHandler.error("invalid doc source");
   }
-
   return domBuilder.doc;
 };
-
 function buildErrorHandler(errorImpl, domBuilder, locator) {
   if (!errorImpl) {
     if (domBuilder instanceof DOMHandler) {
       return domBuilder;
     }
-
     errorImpl = domBuilder;
   }
-
   var errorHandler = {};
   var isCallback = errorImpl instanceof Function;
   locator = locator || {};
-
   function build(key) {
     var fn = errorImpl[key];
-
     if (!fn && isCallback) {
       fn = errorImpl.length == 2 ? function (msg) {
         errorImpl(key, msg);
       } : errorImpl;
     }
-
     errorHandler[key] = fn && function (msg) {
       fn('[xmldom ' + key + ']\t' + msg + _locator(locator));
     } || function () {};
   }
-
   build('warning');
   build('error');
   build('fatalError');
   return errorHandler;
-} //console.log('#\n\n\n\n\n\n\n####')
+}
 
+//console.log('#\n\n\n\n\n\n\n####')
 /**
  * +ContentHandler+ErrorHandler
  * +LexicalHandler+EntityResolver2
@@ -4090,12 +3496,9 @@ function buildErrorHandler(errorImpl, domBuilder, locator) {
  * DefaultHandler2:DefaultHandler,LexicalHandler, DeclHandler, EntityResolver2
  * @link http://www.saxproject.org/apidoc/org/xml/sax/helpers/DefaultHandler.html
  */
-
-
 function DOMHandler() {
   this.cdata = false;
 }
-
 function position(locator, node) {
   node.lineNumber = locator.lineNumber;
   node.columnNumber = locator.columnNumber;
@@ -4104,12 +3507,9 @@ function position(locator, node) {
  * @see org.xml.sax.ContentHandler#startDocument
  * @link http://www.saxproject.org/apidoc/org/xml/sax/ContentHandler.html
  */
-
-
 DOMHandler.prototype = {
   startDocument: function () {
     this.doc = new DOMImplementation().createDocument(null, null, null);
-
     if (this.locator) {
       this.doc.documentURI = this.locator.systemId;
     }
@@ -4121,7 +3521,6 @@ DOMHandler.prototype = {
     appendElement(this, el);
     this.currentElement = el;
     this.locator && position(this.locator, el);
-
     for (var i = 0; i < len; i++) {
       var namespaceURI = attrs.getURI(i);
       var value = attrs.getValue(i);
@@ -4146,19 +3545,19 @@ DOMHandler.prototype = {
   },
   ignorableWhitespace: function (ch, start, length) {},
   characters: function (chars, start, length) {
-    chars = _toString.apply(this, arguments); //console.log(chars)
-
+    chars = _toString.apply(this, arguments);
+    //console.log(chars)
     if (chars) {
       if (this.cdata) {
         var charNode = this.doc.createCDATASection(chars);
       } else {
         var charNode = this.doc.createTextNode(chars);
       }
-
       if (this.currentElement) {
         this.currentElement.appendChild(charNode);
       } else if (/^\s*$/.test(chars)) {
-        this.doc.appendChild(charNode); //process xml
+        this.doc.appendChild(charNode);
+        //process xml
       }
 
       this.locator && position(this.locator, charNode);
@@ -4190,14 +3589,12 @@ DOMHandler.prototype = {
   },
   startDTD: function (name, publicId, systemId) {
     var impl = this.doc.implementation;
-
     if (impl && impl.createDocumentType) {
       var dt = impl.createDocumentType(name, publicId, systemId);
       this.locator && position(this.locator, dt);
       appendElement(this, dt);
     }
   },
-
   /**
    * @see org.xml.sax.ErrorHandler
    * @link http://www.saxproject.org/apidoc/org/xml/sax/ErrorHandler.html
@@ -4213,13 +3610,11 @@ DOMHandler.prototype = {
     throw error;
   }
 };
-
 function _locator(l) {
   if (l) {
     return '\n@' + (l.systemId || '') + '#[line:' + l.lineNumber + ',col:' + l.columnNumber + ']';
   }
 }
-
 function _toString(chars, start, length) {
   if (typeof chars == 'string') {
     return chars.substr(start, length);
@@ -4228,10 +3623,10 @@ function _toString(chars, start, length) {
     if (chars.length >= start + length || start) {
       return new java.lang.String(chars, start, length) + '';
     }
-
     return chars;
   }
 }
+
 /*
  * @link http://www.saxproject.org/apidoc/org/xml/sax/ext/LexicalHandler.html
  * used method of org.xml.sax.ext.LexicalHandler:
@@ -4263,15 +3658,13 @@ function _toString(chars, start, length) {
  *  #notationDecl(name, publicId, systemId) {};
  *  #unparsedEntityDecl(name, publicId, systemId, notationName) {};
  */
-
-
 "endDTD,startEntity,endEntity,attributeDecl,elementDecl,externalEntityDecl,internalEntityDecl,resolveEntity,getExternalSubset,notationDecl,unparsedEntityDecl".replace(/\w+/g, function (key) {
   DOMHandler.prototype[key] = function () {
     return null;
   };
 });
-/* Private static helpers treated below as private instance methods, so don't need to add these to the public API; we might use a Relator to also get rid of non-standard public properties */
 
+/* Private static helpers treated below as private instance methods, so don't need to add these to the public API; we might use a Relator to also get rid of non-standard public properties */
 function appendElement(hander, node) {
   if (!hander.currentElement) {
     hander.doc.appendChild(node);
@@ -4279,17 +3672,14 @@ function appendElement(hander, node) {
     hander.currentElement.appendChild(node);
   }
 } //appendChild and setAttributeNS are preformance key
+
 //if(typeof require == 'function'){
-
-
 var htmlEntity = require('./entities');
-
 var XMLReader = require('./sax').XMLReader;
-
 var DOMImplementation = exports.DOMImplementation = require('./dom').DOMImplementation;
-
 exports.XMLSerializer = require('./dom').XMLSerializer;
-exports.DOMParser = DOMParser; //}
+exports.DOMParser = DOMParser;
+//}
 
 },{"./dom":41,"./entities":42,"./sax":43}],41:[function(require,module,exports){
 "use strict";
@@ -4300,6 +3690,7 @@ exports.DOMParser = DOMParser; //}
  * @see http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
  * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/ecma-script-binding.html
  */
+
 function copy(src, dest) {
   for (var p in src) {
     dest[p] = src[p];
@@ -4309,32 +3700,25 @@ function copy(src, dest) {
 ^\w+\.prototype\.([_\w]+)\s*=\s*((?:.*\{\s*?[\r\n][\s\S]*?^})|\S.*?(?=[;\r\n]));?
 ^\w+\.prototype\.([_\w]+)\s*=\s*(\S.*?(?=[;\r\n]));?
  */
-
-
 function _extends(Class, Super) {
   var pt = Class.prototype;
-
   if (!(pt instanceof Super)) {
     function t() {}
-
     ;
     t.prototype = Super.prototype;
     t = new t();
     copy(pt, t);
     Class.prototype = pt = t;
   }
-
   if (pt.constructor != Class) {
     if (typeof Class != 'function') {
       console.error("unknow Class:" + Class);
     }
-
     pt.constructor = Class;
   }
 }
-
-var htmlns = 'http://www.w3.org/1999/xhtml'; // Node Types
-
+var htmlns = 'http://www.w3.org/1999/xhtml';
+// Node Types
 var NodeType = {};
 var ELEMENT_NODE = NodeType.ELEMENT_NODE = 1;
 var ATTRIBUTE_NODE = NodeType.ATTRIBUTE_NODE = 2;
@@ -4347,8 +3731,9 @@ var COMMENT_NODE = NodeType.COMMENT_NODE = 8;
 var DOCUMENT_NODE = NodeType.DOCUMENT_NODE = 9;
 var DOCUMENT_TYPE_NODE = NodeType.DOCUMENT_TYPE_NODE = 10;
 var DOCUMENT_FRAGMENT_NODE = NodeType.DOCUMENT_FRAGMENT_NODE = 11;
-var NOTATION_NODE = NodeType.NOTATION_NODE = 12; // ExceptionCode
+var NOTATION_NODE = NodeType.NOTATION_NODE = 12;
 
+// ExceptionCode
 var ExceptionCode = {};
 var ExceptionMessage = {};
 var INDEX_SIZE_ERR = ExceptionCode.INDEX_SIZE_ERR = (ExceptionMessage[1] = "Index size error", 1);
@@ -4360,14 +3745,13 @@ var NO_DATA_ALLOWED_ERR = ExceptionCode.NO_DATA_ALLOWED_ERR = (ExceptionMessage[
 var NO_MODIFICATION_ALLOWED_ERR = ExceptionCode.NO_MODIFICATION_ALLOWED_ERR = (ExceptionMessage[7] = "No modification allowed", 7);
 var NOT_FOUND_ERR = ExceptionCode.NOT_FOUND_ERR = (ExceptionMessage[8] = "Not found", 8);
 var NOT_SUPPORTED_ERR = ExceptionCode.NOT_SUPPORTED_ERR = (ExceptionMessage[9] = "Not supported", 9);
-var INUSE_ATTRIBUTE_ERR = ExceptionCode.INUSE_ATTRIBUTE_ERR = (ExceptionMessage[10] = "Attribute in use", 10); //level2
-
+var INUSE_ATTRIBUTE_ERR = ExceptionCode.INUSE_ATTRIBUTE_ERR = (ExceptionMessage[10] = "Attribute in use", 10);
+//level2
 var INVALID_STATE_ERR = ExceptionCode.INVALID_STATE_ERR = (ExceptionMessage[11] = "Invalid state", 11);
 var SYNTAX_ERR = ExceptionCode.SYNTAX_ERR = (ExceptionMessage[12] = "Syntax error", 12);
 var INVALID_MODIFICATION_ERR = ExceptionCode.INVALID_MODIFICATION_ERR = (ExceptionMessage[13] = "Invalid modification", 13);
 var NAMESPACE_ERR = ExceptionCode.NAMESPACE_ERR = (ExceptionMessage[14] = "Invalid namespace", 14);
 var INVALID_ACCESS_ERR = ExceptionCode.INVALID_ACCESS_ERR = (ExceptionMessage[15] = "Invalid access", 15);
-
 function DOMException(code, message) {
   if (message instanceof Error) {
     var error = message;
@@ -4377,12 +3761,10 @@ function DOMException(code, message) {
     this.message = ExceptionMessage[code];
     if (Error.captureStackTrace) Error.captureStackTrace(this, DOMException);
   }
-
   error.code = code;
   if (message) this.message = this.message + ": " + message;
   return error;
 }
-
 ;
 DOMException.prototype = Error.prototype;
 copy(ExceptionCode, DOMException);
@@ -4391,9 +3773,7 @@ copy(ExceptionCode, DOMException);
  * The NodeList interface provides the abstraction of an ordered collection of nodes, without defining or constraining how this collection is implemented. NodeList objects in the DOM are live.
  * The items in the NodeList are accessible via an integral index, starting from 0.
  */
-
 function NodeList() {}
-
 ;
 NodeList.prototype = {
   /**
@@ -4401,7 +3781,6 @@ NodeList.prototype = {
    * @standard level1
    */
   length: 0,
-
   /**
    * Returns the indexth item in the collection. If index is greater than or equal to the number of nodes in the list, this returns null.
    * @standard level1
@@ -4417,38 +3796,28 @@ NodeList.prototype = {
     for (var buf = [], i = 0; i < this.length; i++) {
       serializeToString(this[i], buf, isHTML, nodeFilter);
     }
-
     return buf.join('');
   }
 };
-
 function LiveNodeList(node, refresh) {
   this._node = node;
   this._refresh = refresh;
-
   _updateLiveList(this);
 }
-
 function _updateLiveList(list) {
   var inc = list._node._inc || list._node.ownerDocument._inc;
-
   if (list._inc != inc) {
-    var ls = list._refresh(list._node); //console.log(ls.length)
-
-
+    var ls = list._refresh(list._node);
+    //console.log(ls.length)
     __set__(list, 'length', ls.length);
-
     copy(ls, list);
     list._inc = inc;
   }
 }
-
 LiveNodeList.prototype.item = function (i) {
   _updateLiveList(this);
-
   return this[i];
 };
-
 _extends(LiveNodeList, NodeList);
 /**
  * 
@@ -4456,60 +3825,44 @@ _extends(LiveNodeList, NodeList);
  * NamedNodeMap objects in the DOM are live.
  * used for attributes or DocumentType entities 
  */
-
-
 function NamedNodeMap() {}
-
 ;
-
 function _findNodeIndex(list, node) {
   var i = list.length;
-
   while (i--) {
     if (list[i] === node) {
       return i;
     }
   }
 }
-
 function _addNamedNode(el, list, newAttr, oldAttr) {
   if (oldAttr) {
     list[_findNodeIndex(list, oldAttr)] = newAttr;
   } else {
     list[list.length++] = newAttr;
   }
-
   if (el) {
     newAttr.ownerElement = el;
     var doc = el.ownerDocument;
-
     if (doc) {
       oldAttr && _onRemoveAttribute(doc, el, oldAttr);
-
       _onAddAttribute(doc, el, newAttr);
     }
   }
 }
-
 function _removeNamedNode(el, list, attr) {
   //console.log('remove attr:'+attr)
   var i = _findNodeIndex(list, attr);
-
   if (i >= 0) {
     var lastIndex = list.length - 1;
-
     while (i < lastIndex) {
       list[i] = list[++i];
     }
-
     list.length = lastIndex;
-
     if (el) {
       var doc = el.ownerDocument;
-
       if (doc) {
         _onRemoveAttribute(doc, el, attr);
-
         attr.ownerElement = null;
       }
     }
@@ -4517,7 +3870,6 @@ function _removeNamedNode(el, list, attr) {
     throw DOMException(NOT_FOUND_ERR, new Error(el.tagName + '@' + attr));
   }
 }
-
 NamedNodeMap.prototype = {
   length: 0,
   item: NodeList.prototype.item,
@@ -4527,10 +3879,9 @@ NamedNodeMap.prototype = {
     //		}
     //console.log()
     var i = this.length;
-
     while (i--) {
-      var attr = this[i]; //console.log(attr.nodeName,key)
-
+      var attr = this[i];
+      //console.log(attr.nodeName,key)
       if (attr.nodeName == key) {
         return attr;
       }
@@ -4538,91 +3889,65 @@ NamedNodeMap.prototype = {
   },
   setNamedItem: function (attr) {
     var el = attr.ownerElement;
-
     if (el && el != this._ownerElement) {
       throw new DOMException(INUSE_ATTRIBUTE_ERR);
     }
-
     var oldAttr = this.getNamedItem(attr.nodeName);
-
     _addNamedNode(this._ownerElement, this, attr, oldAttr);
-
     return oldAttr;
   },
-
   /* returns Node */
   setNamedItemNS: function (attr) {
     // raises: WRONG_DOCUMENT_ERR,NO_MODIFICATION_ALLOWED_ERR,INUSE_ATTRIBUTE_ERR
     var el = attr.ownerElement,
-        oldAttr;
-
+      oldAttr;
     if (el && el != this._ownerElement) {
       throw new DOMException(INUSE_ATTRIBUTE_ERR);
     }
-
     oldAttr = this.getNamedItemNS(attr.namespaceURI, attr.localName);
-
     _addNamedNode(this._ownerElement, this, attr, oldAttr);
-
     return oldAttr;
   },
-
   /* returns Node */
   removeNamedItem: function (key) {
     var attr = this.getNamedItem(key);
-
     _removeNamedNode(this._ownerElement, this, attr);
-
     return attr;
   },
   // raises: NOT_FOUND_ERR,NO_MODIFICATION_ALLOWED_ERR
+
   //for level2
   removeNamedItemNS: function (namespaceURI, localName) {
     var attr = this.getNamedItemNS(namespaceURI, localName);
-
     _removeNamedNode(this._ownerElement, this, attr);
-
     return attr;
   },
   getNamedItemNS: function (namespaceURI, localName) {
     var i = this.length;
-
     while (i--) {
       var node = this[i];
-
       if (node.localName == localName && node.namespaceURI == namespaceURI) {
         return node;
       }
     }
-
     return null;
   }
 };
 /**
  * @see http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-102161490
  */
-
-function DOMImplementation(
-/* Object */
-features) {
+function DOMImplementation( /* Object */features) {
   this._features = {};
-
   if (features) {
     for (var feature in features) {
       this._features = features[feature];
     }
   }
 }
-
 ;
 DOMImplementation.prototype = {
-  hasFeature: function (
-  /* string */
-  feature,
-  /* string */
-  version) {
+  hasFeature: function ( /* string */feature, /* string */version) {
     var versions = this._features[feature.toLowerCase()];
-
     if (versions && (!version || version in versions)) {
       return true;
     } else {
@@ -4636,16 +3961,13 @@ DOMImplementation.prototype = {
     doc.implementation = this;
     doc.childNodes = new NodeList();
     doc.doctype = doctype;
-
     if (doctype) {
       doc.appendChild(doctype);
     }
-
     if (qualifiedName) {
       var root = doc.createElementNS(namespaceURI, qualifiedName);
       doc.appendChild(root);
     }
-
     return doc;
   },
   // Introduced in DOM Level 2:
@@ -4655,21 +3977,22 @@ DOMImplementation.prototype = {
     node.name = qualifiedName;
     node.nodeName = qualifiedName;
     node.publicId = publicId;
-    node.systemId = systemId; // Introduced in DOM Level 2:
+    node.systemId = systemId;
+    // Introduced in DOM Level 2:
     //readonly attribute DOMString        internalSubset;
+
     //REFINE:..
     //  readonly attribute NamedNodeMap     entities;
     //  readonly attribute NamedNodeMap     notations;
-
     return node;
   }
 };
+
 /**
  * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/core.html#ID-1950641247
  */
 
 function Node() {}
-
 ;
 Node.prototype = {
   firstChild: null,
@@ -4692,7 +4015,6 @@ Node.prototype = {
   replaceChild: function (newChild, oldChild) {
     //raises 
     this.insertBefore(newChild, oldChild);
-
     if (oldChild) {
       this.removeChild(oldChild);
     }
@@ -4712,10 +4034,8 @@ Node.prototype = {
   // Modified in DOM Level 2:
   normalize: function () {
     var child = this.firstChild;
-
     while (child) {
       var next = child.nextSibling;
-
       if (next && next.nodeType == TEXT_NODE && child.nodeType == TEXT_NODE) {
         this.removeChild(next);
         child.appendData(next.data);
@@ -4735,10 +4055,9 @@ Node.prototype = {
   },
   lookupPrefix: function (namespaceURI) {
     var el = this;
-
     while (el) {
-      var map = el._nsMap; //console.dir(map)
-
+      var map = el._nsMap;
+      //console.dir(map)
       if (map) {
         for (var n in map) {
           if (map[n] == namespaceURI) {
@@ -4746,28 +4065,23 @@ Node.prototype = {
           }
         }
       }
-
       el = el.nodeType == ATTRIBUTE_NODE ? el.ownerDocument : el.parentNode;
     }
-
     return null;
   },
   // Introduced in DOM Level 3:
   lookupNamespaceURI: function (prefix) {
     var el = this;
-
     while (el) {
-      var map = el._nsMap; //console.dir(map)
-
+      var map = el._nsMap;
+      //console.dir(map)
       if (map) {
         if (prefix in map) {
           return map[prefix];
         }
       }
-
       el = el.nodeType == ATTRIBUTE_NODE ? el.ownerDocument : el.parentNode;
     }
-
     return null;
   },
   // Introduced in DOM Level 3:
@@ -4776,23 +4090,20 @@ Node.prototype = {
     return prefix == null;
   }
 };
-
 function _xmlEncoder(c) {
   return c == '<' && '&lt;' || c == '>' && '&gt;' || c == '&' && '&amp;' || c == '"' && '&quot;' || '&#' + c.charCodeAt() + ';';
 }
-
 copy(NodeType, Node);
 copy(NodeType, Node.prototype);
+
 /**
  * @param callback return true for continue,false for break
  * @return boolean true: break visit;
  */
-
 function _visitNode(node, callback) {
   if (callback(node)) {
     return true;
   }
-
   if (node = node.firstChild) {
     do {
       if (_visitNode(node, callback)) {
@@ -4801,51 +4112,43 @@ function _visitNode(node, callback) {
     } while (node = node.nextSibling);
   }
 }
-
 function Document() {}
-
 function _onAddAttribute(doc, el, newAttr) {
   doc && doc._inc++;
   var ns = newAttr.namespaceURI;
-
   if (ns == 'http://www.w3.org/2000/xmlns/') {
     //update namespace
     el._nsMap[newAttr.prefix ? newAttr.localName : ''] = newAttr.value;
   }
 }
-
 function _onRemoveAttribute(doc, el, newAttr, remove) {
   doc && doc._inc++;
   var ns = newAttr.namespaceURI;
-
   if (ns == 'http://www.w3.org/2000/xmlns/') {
     //update namespace
     delete el._nsMap[newAttr.prefix ? newAttr.localName : ''];
   }
 }
-
 function _onUpdateChild(doc, el, newChild) {
   if (doc && doc._inc) {
-    doc._inc++; //update childNodes
-
+    doc._inc++;
+    //update childNodes
     var cs = el.childNodes;
-
     if (newChild) {
       cs[cs.length++] = newChild;
     } else {
       //console.log(1)
       var child = el.firstChild;
       var i = 0;
-
       while (child) {
         cs[i++] = child;
         child = child.nextSibling;
       }
-
       cs.length = i;
     }
   }
 }
+
 /**
  * attributes;
  * children;
@@ -4854,108 +4157,83 @@ function _onUpdateChild(doc, el, newChild) {
  * nodeValue,Attr:value,CharacterData:data
  * prefix
  */
-
-
 function _removeChild(parentNode, child) {
   var previous = child.previousSibling;
   var next = child.nextSibling;
-
   if (previous) {
     previous.nextSibling = next;
   } else {
     parentNode.firstChild = next;
   }
-
   if (next) {
     next.previousSibling = previous;
   } else {
     parentNode.lastChild = previous;
   }
-
   _onUpdateChild(parentNode.ownerDocument, parentNode);
-
   return child;
 }
 /**
  * preformance key(refChild == null)
  */
-
-
 function _insertBefore(parentNode, newChild, nextChild) {
   var cp = newChild.parentNode;
-
   if (cp) {
     cp.removeChild(newChild); //remove and update
   }
 
   if (newChild.nodeType === DOCUMENT_FRAGMENT_NODE) {
     var newFirst = newChild.firstChild;
-
     if (newFirst == null) {
       return newChild;
     }
-
     var newLast = newChild.lastChild;
   } else {
     newFirst = newLast = newChild;
   }
-
   var pre = nextChild ? nextChild.previousSibling : parentNode.lastChild;
   newFirst.previousSibling = pre;
   newLast.nextSibling = nextChild;
-
   if (pre) {
     pre.nextSibling = newFirst;
   } else {
     parentNode.firstChild = newFirst;
   }
-
   if (nextChild == null) {
     parentNode.lastChild = newLast;
   } else {
     nextChild.previousSibling = newLast;
   }
-
   do {
     newFirst.parentNode = parentNode;
   } while (newFirst !== newLast && (newFirst = newFirst.nextSibling));
-
-  _onUpdateChild(parentNode.ownerDocument || parentNode, parentNode); //console.log(parentNode.lastChild.nextSibling == null)
-
-
+  _onUpdateChild(parentNode.ownerDocument || parentNode, parentNode);
+  //console.log(parentNode.lastChild.nextSibling == null)
   if (newChild.nodeType == DOCUMENT_FRAGMENT_NODE) {
     newChild.firstChild = newChild.lastChild = null;
   }
-
   return newChild;
 }
-
 function _appendSingleChild(parentNode, newChild) {
   var cp = newChild.parentNode;
-
   if (cp) {
     var pre = parentNode.lastChild;
     cp.removeChild(newChild); //remove and update
-
     var pre = parentNode.lastChild;
   }
-
   var pre = parentNode.lastChild;
   newChild.parentNode = parentNode;
   newChild.previousSibling = pre;
   newChild.nextSibling = null;
-
   if (pre) {
     pre.nextSibling = newChild;
   } else {
     parentNode.firstChild = newChild;
   }
-
   parentNode.lastChild = newChild;
-
   _onUpdateChild(parentNode.ownerDocument, parentNode, newChild);
-
-  return newChild; //console.log("__aa",parentNode.lastChild.nextSibling == null)
+  return newChild;
+  //console.log("__aa",parentNode.lastChild.nextSibling == null)
 }
 
 Document.prototype = {
@@ -4969,27 +4247,22 @@ Document.prototype = {
     //raises 
     if (newChild.nodeType == DOCUMENT_FRAGMENT_NODE) {
       var child = newChild.firstChild;
-
       while (child) {
         var next = child.nextSibling;
         this.insertBefore(child, refChild);
         child = next;
       }
-
       return newChild;
     }
-
     if (this.documentElement == null && newChild.nodeType == ELEMENT_NODE) {
       this.documentElement = newChild;
     }
-
     return _insertBefore(this, newChild, refChild), newChild.ownerDocument = this, newChild;
   },
   removeChild: function (oldChild) {
     if (this.documentElement == oldChild) {
       this.documentElement = null;
     }
-
     return _removeChild(this, oldChild);
   },
   // Introduced in DOM Level 2:
@@ -4999,7 +4272,6 @@ Document.prototype = {
   // Introduced in DOM Level 2:
   getElementById: function (id) {
     var rtv = null;
-
     _visitNode(this.documentElement, function (node) {
       if (node.nodeType == ELEMENT_NODE) {
         if (node.getAttribute('id') == id) {
@@ -5008,7 +4280,6 @@ Document.prototype = {
         }
       }
     });
-
     return rtv;
   },
   //document factory method:
@@ -5078,7 +4349,6 @@ Document.prototype = {
     node.nodeName = qualifiedName;
     node.tagName = qualifiedName;
     node.namespaceURI = namespaceURI;
-
     if (pl.length == 2) {
       node.prefix = pl[0];
       node.localName = pl[1];
@@ -5086,7 +4356,6 @@ Document.prototype = {
       //el.prefix = null;
       node.localName = qualifiedName;
     }
-
     attrs._ownerElement = node;
     return node;
   },
@@ -5099,7 +4368,6 @@ Document.prototype = {
     node.name = qualifiedName;
     node.namespaceURI = namespaceURI;
     node.specified = true;
-
     if (pl.length == 2) {
       node.prefix = pl[0];
       node.localName = pl[1];
@@ -5107,17 +4375,13 @@ Document.prototype = {
       //el.prefix = null;
       node.localName = qualifiedName;
     }
-
     return node;
   }
 };
-
 _extends(Document, Node);
-
 function Element() {
   this._nsMap = {};
 }
-
 ;
 Element.prototype = {
   nodeType: ELEMENT_NODE,
@@ -5181,44 +4445,34 @@ Element.prototype = {
   getElementsByTagName: function (tagName) {
     return new LiveNodeList(this, function (base) {
       var ls = [];
-
       _visitNode(base, function (node) {
         if (node !== base && node.nodeType == ELEMENT_NODE && (tagName === '*' || node.tagName == tagName)) {
           ls.push(node);
         }
       });
-
       return ls;
     });
   },
   getElementsByTagNameNS: function (namespaceURI, localName) {
     return new LiveNodeList(this, function (base) {
       var ls = [];
-
       _visitNode(base, function (node) {
         if (node !== base && node.nodeType === ELEMENT_NODE && (namespaceURI === '*' || node.namespaceURI === namespaceURI) && (localName === '*' || node.localName == localName)) {
           ls.push(node);
         }
       });
-
       return ls;
     });
   }
 };
 Document.prototype.getElementsByTagName = Element.prototype.getElementsByTagName;
 Document.prototype.getElementsByTagNameNS = Element.prototype.getElementsByTagNameNS;
-
 _extends(Element, Node);
-
 function Attr() {}
-
 ;
 Attr.prototype.nodeType = ATTRIBUTE_NODE;
-
 _extends(Attr, Node);
-
 function CharacterData() {}
-
 ;
 CharacterData.prototype = {
   data: '',
@@ -5247,11 +4501,8 @@ CharacterData.prototype = {
     this.length = text.length;
   }
 };
-
 _extends(CharacterData, Node);
-
 function Text() {}
-
 ;
 Text.prototype = {
   nodeName: "#text",
@@ -5263,148 +4514,109 @@ Text.prototype = {
     this.data = this.nodeValue = text;
     this.length = text.length;
     var newNode = this.ownerDocument.createTextNode(newText);
-
     if (this.parentNode) {
       this.parentNode.insertBefore(newNode, this.nextSibling);
     }
-
     return newNode;
   }
 };
-
 _extends(Text, CharacterData);
-
 function Comment() {}
-
 ;
 Comment.prototype = {
   nodeName: "#comment",
   nodeType: COMMENT_NODE
 };
-
 _extends(Comment, CharacterData);
-
 function CDATASection() {}
-
 ;
 CDATASection.prototype = {
   nodeName: "#cdata-section",
   nodeType: CDATA_SECTION_NODE
 };
-
 _extends(CDATASection, CharacterData);
-
 function DocumentType() {}
-
 ;
 DocumentType.prototype.nodeType = DOCUMENT_TYPE_NODE;
-
 _extends(DocumentType, Node);
-
 function Notation() {}
-
 ;
 Notation.prototype.nodeType = NOTATION_NODE;
-
 _extends(Notation, Node);
-
 function Entity() {}
-
 ;
 Entity.prototype.nodeType = ENTITY_NODE;
-
 _extends(Entity, Node);
-
 function EntityReference() {}
-
 ;
 EntityReference.prototype.nodeType = ENTITY_REFERENCE_NODE;
-
 _extends(EntityReference, Node);
-
 function DocumentFragment() {}
-
 ;
 DocumentFragment.prototype.nodeName = "#document-fragment";
 DocumentFragment.prototype.nodeType = DOCUMENT_FRAGMENT_NODE;
-
 _extends(DocumentFragment, Node);
-
 function ProcessingInstruction() {}
-
 ProcessingInstruction.prototype.nodeType = PROCESSING_INSTRUCTION_NODE;
-
 _extends(ProcessingInstruction, Node);
-
 function XMLSerializer() {}
-
 XMLSerializer.prototype.serializeToString = function (node, isHtml, nodeFilter) {
   return nodeSerializeToString.call(node, isHtml, nodeFilter);
 };
-
 Node.prototype.toString = nodeSerializeToString;
-
 function nodeSerializeToString(isHtml, nodeFilter) {
   var buf = [];
   var refNode = this.nodeType == 9 && this.documentElement || this;
   var prefix = refNode.prefix;
   var uri = refNode.namespaceURI;
-
   if (uri && prefix == null) {
     //console.log(prefix)
     var prefix = refNode.lookupPrefix(uri);
-
     if (prefix == null) {
       //isHTML = true;
       var visibleNamespaces = [{
         namespace: uri,
         prefix: null
-      } //{namespace:uri,prefix:''}
+      }
+      //{namespace:uri,prefix:''}
       ];
     }
   }
 
-  serializeToString(this, buf, isHtml, nodeFilter, visibleNamespaces); //console.log('###',this.nodeType,uri,prefix,buf.join(''))
-
+  serializeToString(this, buf, isHtml, nodeFilter, visibleNamespaces);
+  //console.log('###',this.nodeType,uri,prefix,buf.join(''))
   return buf.join('');
 }
-
 function needNamespaceDefine(node, isHTML, visibleNamespaces) {
   var prefix = node.prefix || '';
   var uri = node.namespaceURI;
-
   if (!prefix && !uri) {
     return false;
   }
-
   if (prefix === "xml" && uri === "http://www.w3.org/XML/1998/namespace" || uri == 'http://www.w3.org/2000/xmlns/') {
     return false;
   }
-
-  var i = visibleNamespaces.length; //console.log('@@@@',node.tagName,prefix,uri,visibleNamespaces)
-
+  var i = visibleNamespaces.length;
+  //console.log('@@@@',node.tagName,prefix,uri,visibleNamespaces)
   while (i--) {
-    var ns = visibleNamespaces[i]; // get namespace prefix
+    var ns = visibleNamespaces[i];
+    // get namespace prefix
     //console.log(node.nodeType,node.tagName,ns.prefix,prefix)
-
     if (ns.prefix == prefix) {
       return ns.namespace != uri;
     }
-  } //console.log(isHTML,uri,prefix=='')
+  }
+  //console.log(isHTML,uri,prefix=='')
   //if(isHTML && prefix ==null && uri == 'http://www.w3.org/1999/xhtml'){
   //	return false;
   //}
   //node.flag = '11111'
   //console.error(3,true,node.flag,node.prefix,node.namespaceURI)
-
-
   return true;
 }
-
 function serializeToString(node, buf, isHTML, nodeFilter, visibleNamespaces) {
   if (nodeFilter) {
     node = nodeFilter(node);
-
     if (node) {
       if (typeof node == 'string') {
         buf.push(node);
@@ -5412,8 +4624,8 @@ function serializeToString(node, buf, isHTML, nodeFilter, visibleNamespaces) {
       }
     } else {
       return;
-    } //buf.sort.apply(attrs, attributeSorter);
-
+    }
+    //buf.sort.apply(attrs, attributeSorter);
   }
 
   switch (node.nodeType) {
@@ -5426,11 +4638,9 @@ function serializeToString(node, buf, isHTML, nodeFilter, visibleNamespaces) {
       var nodeName = node.tagName;
       isHTML = htmlns === node.namespaceURI || isHTML;
       buf.push('<', nodeName);
-
       for (var i = 0; i < len; i++) {
         // add namespaces for attributes
         var attr = attrs.item(i);
-
         if (attr.prefix == 'xmlns') {
           visibleNamespaces.push({
             prefix: attr.localName,
@@ -5443,10 +4653,8 @@ function serializeToString(node, buf, isHTML, nodeFilter, visibleNamespaces) {
           });
         }
       }
-
       for (var i = 0; i < len; i++) {
         var attr = attrs.item(i);
-
         if (needNamespaceDefine(attr, isHTML, visibleNamespaces)) {
           var prefix = attr.prefix || '';
           var uri = attr.namespaceURI;
@@ -5457,11 +4665,9 @@ function serializeToString(node, buf, isHTML, nodeFilter, visibleNamespaces) {
             namespace: uri
           });
         }
-
         serializeToString(attr, buf, isHTML, nodeFilter, visibleNamespaces);
-      } // add namespace for current node		
-
-
+      }
+      // add namespace for current node		
       if (needNamespaceDefine(node, isHTML, visibleNamespaces)) {
         var prefix = node.prefix || '';
         var uri = node.namespaceURI;
@@ -5472,10 +4678,9 @@ function serializeToString(node, buf, isHTML, nodeFilter, visibleNamespaces) {
           namespace: uri
         });
       }
-
       if (child || isHTML && !/^(?:meta|link|img|br|hr|input)$/i.test(nodeName)) {
-        buf.push('>'); //if is cdata child node
-
+        buf.push('>');
+        //if is cdata child node
         if (isHTML && /^script$/i.test(nodeName)) {
           while (child) {
             if (child.data) {
@@ -5483,7 +4688,6 @@ function serializeToString(node, buf, isHTML, nodeFilter, visibleNamespaces) {
             } else {
               serializeToString(child, buf, isHTML, nodeFilter, visibleNamespaces);
             }
-
             child = child.nextSibling;
           }
         } else {
@@ -5492,82 +4696,61 @@ function serializeToString(node, buf, isHTML, nodeFilter, visibleNamespaces) {
             child = child.nextSibling;
           }
         }
-
         buf.push('</', nodeName, '>');
       } else {
         buf.push('/>');
-      } // remove added visible namespaces
+      }
+      // remove added visible namespaces
       //visibleNamespaces.length = startVisibleNamespaces;
-
-
       return;
-
     case DOCUMENT_NODE:
     case DOCUMENT_FRAGMENT_NODE:
       var child = node.firstChild;
-
       while (child) {
         serializeToString(child, buf, isHTML, nodeFilter, visibleNamespaces);
         child = child.nextSibling;
       }
-
       return;
-
     case ATTRIBUTE_NODE:
       return buf.push(' ', node.name, '="', node.value.replace(/[<&"]/g, _xmlEncoder), '"');
-
     case TEXT_NODE:
       return buf.push(node.data.replace(/[<&]/g, _xmlEncoder));
-
     case CDATA_SECTION_NODE:
       return buf.push('<![CDATA[', node.data, ']]>');
-
     case COMMENT_NODE:
       return buf.push("<!--", node.data, "-->");
-
     case DOCUMENT_TYPE_NODE:
       var pubid = node.publicId;
       var sysid = node.systemId;
       buf.push('<!DOCTYPE ', node.name);
-
       if (pubid) {
         buf.push(' PUBLIC "', pubid);
-
         if (sysid && sysid != '.') {
           buf.push('" "', sysid);
         }
-
         buf.push('">');
       } else if (sysid && sysid != '.') {
         buf.push(' SYSTEM "', sysid, '">');
       } else {
         var sub = node.internalSubset;
-
         if (sub) {
           buf.push(" [", sub, "]");
         }
-
         buf.push(">");
       }
-
       return;
-
     case PROCESSING_INSTRUCTION_NODE:
       return buf.push("<?", node.target, " ", node.data, "?>");
-
     case ENTITY_REFERENCE_NODE:
       return buf.push('&', node.nodeName, ';');
     //case ENTITY_NODE:
     //case NOTATION_NODE:
-
     default:
       buf.push('??', node.nodeName);
   }
 }
-
 function importNode(doc, node, deep) {
   var node2;
-
   switch (node.nodeType) {
     case ELEMENT_NODE:
       node2 = node.cloneNode(false);
@@ -5577,10 +4760,8 @@ function importNode(doc, node, deep) {
     //for(var i=0;i<len;i++){
     //node2.setAttributeNodeNS(importNode(doc,attrs.item(i),deep));
     //}
-
     case DOCUMENT_FRAGMENT_NODE:
       break;
-
     case ATTRIBUTE_NODE:
       deep = true;
       break;
@@ -5606,82 +4787,64 @@ function importNode(doc, node, deep) {
 
   node2.ownerDocument = doc;
   node2.parentNode = null;
-
   if (deep) {
     var child = node.firstChild;
-
     while (child) {
       node2.appendChild(importNode(doc, child, deep));
       child = child.nextSibling;
     }
   }
-
   return node2;
-} //
+}
+//
 //var _relationMap = {firstChild:1,lastChild:1,previousSibling:1,nextSibling:1,
 //					attributes:1,childNodes:1,parentNode:1,documentElement:1,doctype,};
-
-
 function cloneNode(doc, node, deep) {
   var node2 = new node.constructor();
-
   for (var n in node) {
     var v = node[n];
-
     if (typeof v != 'object') {
       if (v != node2[n]) {
         node2[n] = v;
       }
     }
   }
-
   if (node.childNodes) {
     node2.childNodes = new NodeList();
   }
-
   node2.ownerDocument = doc;
-
   switch (node2.nodeType) {
     case ELEMENT_NODE:
       var attrs = node.attributes;
       var attrs2 = node2.attributes = new NamedNodeMap();
       var len = attrs.length;
       attrs2._ownerElement = node2;
-
       for (var i = 0; i < len; i++) {
         node2.setAttributeNode(cloneNode(doc, attrs.item(i), true));
       }
-
       break;
       ;
-
     case ATTRIBUTE_NODE:
       deep = true;
   }
-
   if (deep) {
     var child = node.firstChild;
-
     while (child) {
       node2.appendChild(cloneNode(doc, child, deep));
       child = child.nextSibling;
     }
   }
-
   return node2;
 }
-
 function __set__(object, key, value) {
   object[key] = value;
-} //do dynamic
-
-
+}
+//do dynamic
 try {
   if (Object.defineProperty) {
     Object.defineProperty(LiveNodeList.prototype, 'length', {
       get: function () {
         _updateLiveList(this);
-
         return this.$$length;
       }
     });
@@ -5696,13 +4859,10 @@ try {
             while (this.firstChild) {
               this.removeChild(this.firstChild);
             }
-
             if (data || String(data)) {
               this.appendChild(this.ownerDocument.createTextNode(data));
             }
-
             break;
-
           default:
             //REFINE:
             this.data = data;
@@ -5711,40 +4871,35 @@ try {
         }
       }
     });
-
     function getTextContent(node) {
       switch (node.nodeType) {
         case ELEMENT_NODE:
         case DOCUMENT_FRAGMENT_NODE:
           var buf = [];
           node = node.firstChild;
-
           while (node) {
             if (node.nodeType !== 7 && node.nodeType !== 8) {
               buf.push(getTextContent(node));
             }
-
             node = node.nextSibling;
           }
-
           return buf.join('');
-
         default:
           return node.nodeValue;
       }
     }
-
     __set__ = function (object, key, value) {
       //console.log(value)
       object['$$' + key] = value;
     };
   }
 } catch (e) {//ie8
-} //if(typeof require == 'function'){
+}
 
-
+//if(typeof require == 'function'){
 exports.DOMImplementation = DOMImplementation;
-exports.XMLSerializer = XMLSerializer; //}
+exports.XMLSerializer = XMLSerializer;
+//}
 
 },{}],42:[function(require,module,exports){
 "use strict";
@@ -5991,7 +5146,8 @@ exports.entityMap = {
   clubs: "♣",
   hearts: "♥",
   diams: "♦"
-}; //for(var  n in exports.entityMap){console.log(exports.entityMap[n].charCodeAt())}
+};
+//for(var  n in exports.entityMap){console.log(exports.entityMap[n].charCodeAt())}
 
 },{}],43:[function(require,module,exports){
 "use strict";
@@ -6000,43 +5156,32 @@ exports.entityMap = {
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
 var nameStartChar = /[A-Z_a-z\xC0-\xD6\xD8-\xF6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/; //\u10000-\uEFFFF
-
 var nameChar = new RegExp("[\\-\\.0-9" + nameStartChar.source.slice(1, -1) + "\\u00B7\\u0300-\\u036F\\u203F-\\u2040]");
-var tagNamePattern = new RegExp('^' + nameStartChar.source + nameChar.source + '*(?:\:' + nameStartChar.source + nameChar.source + '*)?$'); //var tagNamePattern = /^[a-zA-Z_][\w\-\.]*(?:\:[a-zA-Z_][\w\-\.]*)?$/
+var tagNamePattern = new RegExp('^' + nameStartChar.source + nameChar.source + '*(?:\:' + nameStartChar.source + nameChar.source + '*)?$');
+//var tagNamePattern = /^[a-zA-Z_][\w\-\.]*(?:\:[a-zA-Z_][\w\-\.]*)?$/
 //var handlers = 'resolveEntity,getExternalSubset,characters,endDocument,endElement,endPrefixMapping,ignorableWhitespace,processingInstruction,setDocumentLocator,skippedEntity,startDocument,startElement,startPrefixMapping,notationDecl,unparsedEntityDecl,error,fatalError,warning,attributeDecl,elementDecl,externalEntityDecl,internalEntityDecl,comment,endCDATA,endDTD,endEntity,startCDATA,startDTD,startEntity'.split(',')
+
 //S_TAG,	S_ATTR,	S_EQ,	S_ATTR_NOQUOT_VALUE
 //S_ATTR_SPACE,	S_ATTR_END,	S_TAG_SPACE, S_TAG_CLOSE
-
 var S_TAG = 0; //tag name offerring
-
 var S_ATTR = 1; //attr name offerring 
-
 var S_ATTR_SPACE = 2; //attr name end and space offer
-
 var S_EQ = 3; //=space?
-
 var S_ATTR_NOQUOT_VALUE = 4; //attr value(no quot value only)
-
 var S_ATTR_END = 5; //attr value end and no space(quot end)
-
 var S_TAG_SPACE = 6; //(attr value end || tag end ) && (space offer)
-
 var S_TAG_CLOSE = 7; //closed el<el />
 
 function XMLReader() {}
-
 XMLReader.prototype = {
   parse: function (source, defaultNSMap, entityMap) {
     var domBuilder = this.domBuilder;
     domBuilder.startDocument();
-
     _copy(defaultNSMap, defaultNSMap = {});
-
     parse(source, defaultNSMap, entityMap, domBuilder, this.errorHandler);
     domBuilder.endDocument();
   }
 };
-
 function parse(source, defaultNSMapCopy, entityMap, domBuilder, errorHandler) {
   function fixedFromCharCode(code) {
     // String.prototype.fromCharCode does not supports
@@ -6044,16 +5189,14 @@ function parse(source, defaultNSMapCopy, entityMap, domBuilder, errorHandler) {
     if (code > 0xffff) {
       code -= 0x10000;
       var surrogate1 = 0xd800 + (code >> 10),
-          surrogate2 = 0xdc00 + (code & 0x3ff);
+        surrogate2 = 0xdc00 + (code & 0x3ff);
       return String.fromCharCode(surrogate1, surrogate2);
     } else {
       return String.fromCharCode(code);
     }
   }
-
   function entityReplacer(a) {
     var k = a.slice(1, -1);
-
     if (k in entityMap) {
       return entityMap[k];
     } else if (k.charAt(0) === '#') {
@@ -6063,7 +5206,6 @@ function parse(source, defaultNSMapCopy, entityMap, domBuilder, errorHandler) {
       return a;
     }
   }
-
   function appendText(end) {
     //has some bugs
     if (end > start) {
@@ -6073,17 +5215,16 @@ function parse(source, defaultNSMapCopy, entityMap, domBuilder, errorHandler) {
       start = end;
     }
   }
-
   function position(p, m) {
     while (p >= lineEnd && (m = linePattern.exec(source))) {
       lineStart = m.index;
       lineEnd = lineStart + m[0].length;
-      locator.lineNumber++; //console.log('line++:',locator,startPos,endPos)
+      locator.lineNumber++;
+      //console.log('line++:',locator,startPos,endPos)
     }
 
     locator.columnNumber = p - lineStart + 1;
   }
-
   var lineStart = 0;
   var lineEnd = 0;
   var linePattern = /.*(?:\r\n?|\n)|.*$/g;
@@ -6093,11 +5234,9 @@ function parse(source, defaultNSMapCopy, entityMap, domBuilder, errorHandler) {
   }];
   var closeMap = {};
   var start = 0;
-
   while (true) {
     try {
       var tagStart = source.indexOf('<', start);
-
       if (tagStart < 0) {
         if (!source.substr(start).match(/^\s*$/)) {
           var doc = domBuilder.doc;
@@ -6105,119 +5244,100 @@ function parse(source, defaultNSMapCopy, entityMap, domBuilder, errorHandler) {
           doc.appendChild(text);
           domBuilder.currentElement = text;
         }
-
         return;
       }
-
       if (tagStart > start) {
         appendText(tagStart);
       }
-
       switch (source.charAt(tagStart + 1)) {
         case '/':
           var end = source.indexOf('>', tagStart + 3);
           var tagName = source.substring(tagStart + 2, end);
           var config = parseStack.pop();
-
           if (end < 0) {
-            tagName = source.substring(tagStart + 2).replace(/[\s<].*/, ''); //console.error('#@@@@@@'+tagName)
-
+            tagName = source.substring(tagStart + 2).replace(/[\s<].*/, '');
+            //console.error('#@@@@@@'+tagName)
             errorHandler.error("end tag name: " + tagName + ' is not complete:' + config.tagName);
             end = tagStart + 1 + tagName.length;
           } else if (tagName.match(/\s</)) {
             tagName = tagName.replace(/[\s<].*/, '');
             errorHandler.error("end tag name: " + tagName + ' maybe not complete');
             end = tagStart + 1 + tagName.length;
-          } //console.error(parseStack.length,parseStack)
+          }
+          //console.error(parseStack.length,parseStack)
           //console.error(config);
-
-
           var localNSMap = config.localNSMap;
           var endMatch = config.tagName == tagName;
           var endIgnoreCaseMach = endMatch || config.tagName && config.tagName.toLowerCase() == tagName.toLowerCase();
-
           if (endIgnoreCaseMach) {
             domBuilder.endElement(config.uri, config.localName, tagName);
-
             if (localNSMap) {
               for (var prefix in localNSMap) {
                 domBuilder.endPrefixMapping(prefix);
               }
             }
-
             if (!endMatch) {
               errorHandler.fatalError("end tag name: " + tagName + ' is not match the current start tagName:' + config.tagName);
             }
           } else {
             parseStack.push(config);
           }
-
           end++;
           break;
         // end elment
-
         case '?':
           // <?...?>
           locator && position(tagStart);
           end = parseInstruction(source, tagStart, domBuilder);
           break;
-
         case '!':
           // <!doctype,<![CDATA,<!--
           locator && position(tagStart);
           end = parseDCC(source, tagStart, domBuilder, errorHandler);
           break;
-
         default:
           locator && position(tagStart);
           var el = new ElementAttributes();
-          var currentNSMap = parseStack[parseStack.length - 1].currentNSMap; //elStartEnd
-
+          var currentNSMap = parseStack[parseStack.length - 1].currentNSMap;
+          //elStartEnd
           var end = parseElementStartPart(source, tagStart, el, currentNSMap, entityReplacer, errorHandler);
           var len = el.length;
-
           if (!el.closed && fixSelfClosed(source, end, el.tagName, closeMap)) {
             el.closed = true;
-
             if (!entityMap.nbsp) {
               errorHandler.warning('unclosed xml attribute');
             }
           }
-
           if (locator && len) {
-            var locator2 = copyLocator(locator, {}); //try{//attribute position fixed
-
+            var locator2 = copyLocator(locator, {});
+            //try{//attribute position fixed
             for (var i = 0; i < len; i++) {
               var a = el[i];
               position(a.offset);
               a.locator = copyLocator(locator, {});
-            } //}catch(e){console.error('@@@@@'+e)}
-
-
+            }
+            //}catch(e){console.error('@@@@@'+e)}
             domBuilder.locator = locator2;
-
             if (appendElement(el, domBuilder, currentNSMap)) {
               parseStack.push(el);
             }
-
             domBuilder.locator = locator;
           } else {
             if (appendElement(el, domBuilder, currentNSMap)) {
               parseStack.push(el);
             }
           }
-
           if (el.uri === 'http://www.w3.org/1999/xhtml' && !el.closed) {
             end = parseHtmlSpecialContent(source, end, el.tagName, entityReplacer, domBuilder);
           } else {
             end++;
           }
-
       }
     } catch (e) {
-      errorHandler.error('element parse error: ' + e); //errorHandler.error('element parse error: '+e);
-
-      end = -1; //throw e;
+      errorHandler.error('element parse error: ' + e);
+      //errorHandler.error('element parse error: '+e);
+      end = -1;
+      //throw e;
     }
 
     if (end > start) {
@@ -6228,27 +5348,23 @@ function parse(source, defaultNSMapCopy, entityMap, domBuilder, errorHandler) {
     }
   }
 }
-
 function copyLocator(f, t) {
   t.lineNumber = f.lineNumber;
   t.columnNumber = f.columnNumber;
   return t;
 }
+
 /**
  * @see #appendElement(source,elStartEnd,el,selfClosed,entityReplacer,domBuilder,parseStack);
  * @return end of the elementStartPart(end of elementEndPart for selfClosed el)
  */
-
-
 function parseElementStartPart(source, start, el, currentNSMap, entityReplacer, errorHandler) {
   var attrName;
   var value;
   var p = ++start;
   var s = S_TAG; //status
-
   while (true) {
     var c = source.charAt(p);
-
     switch (c) {
       case '=':
         if (s === S_ATTR) {
@@ -6261,35 +5377,31 @@ function parseElementStartPart(source, start, el, currentNSMap, entityReplacer, 
           //fatalError: equal must after attrName or space after attrName
           throw new Error('attribute equal must after attrName');
         }
-
         break;
-
       case '\'':
       case '"':
         if (s === S_EQ || s === S_ATTR //|| s == S_ATTR_SPACE
         ) {
-            //equal
-            if (s === S_ATTR) {
-              errorHandler.warning('attribute value must after "="');
-              attrName = source.slice(start, p);
-            }
-
-            start = p + 1;
-            p = source.indexOf(c, start);
-
-            if (p > 0) {
-              value = source.slice(start, p).replace(/&#?\w+;/g, entityReplacer);
-              el.add(attrName, value, start - 1);
-              s = S_ATTR_END;
-            } else {
-              //fatalError: no end quot match
-              throw new Error('attribute value no end \'' + c + '\' match');
-            }
-          } else if (s == S_ATTR_NOQUOT_VALUE) {
-          value = source.slice(start, p).replace(/&#?\w+;/g, entityReplacer); //console.log(attrName,value,start,p)
-
-          el.add(attrName, value, start); //console.dir(el)
-
+          //equal
+          if (s === S_ATTR) {
+            errorHandler.warning('attribute value must after "="');
+            attrName = source.slice(start, p);
+          }
+          start = p + 1;
+          p = source.indexOf(c, start);
+          if (p > 0) {
+            value = source.slice(start, p).replace(/&#?\w+;/g, entityReplacer);
+            el.add(attrName, value, start - 1);
+            s = S_ATTR_END;
+          } else {
+            //fatalError: no end quot match
+            throw new Error('attribute value no end \'' + c + '\' match');
+          }
+        } else if (s == S_ATTR_NOQUOT_VALUE) {
+          value = source.slice(start, p).replace(/&#?\w+;/g, entityReplacer);
+          //console.log(attrName,value,start,p)
+          el.add(attrName, value, start);
+          //console.dir(el)
           errorHandler.warning('attribute "' + attrName + '" missed start quot(' + c + ')!!');
           start = p + 1;
           s = S_ATTR_END;
@@ -6297,69 +5409,53 @@ function parseElementStartPart(source, start, el, currentNSMap, entityReplacer, 
           //fatalError: no equal before
           throw new Error('attribute value must after "="');
         }
-
         break;
-
       case '/':
         switch (s) {
           case S_TAG:
             el.setTagName(source.slice(start, p));
-
           case S_ATTR_END:
           case S_TAG_SPACE:
           case S_TAG_CLOSE:
             s = S_TAG_CLOSE;
             el.closed = true;
-
           case S_ATTR_NOQUOT_VALUE:
           case S_ATTR:
           case S_ATTR_SPACE:
             break;
           //case S_EQ:
-
           default:
             throw new Error("attribute invalid close char('/')");
         }
-
         break;
-
       case '':
         //end document
         //throw new Error('unexpected end of input')
         errorHandler.error('unexpected end of input');
-
         if (s == S_TAG) {
           el.setTagName(source.slice(start, p));
         }
-
         return p;
-
       case '>':
         switch (s) {
           case S_TAG:
             el.setTagName(source.slice(start, p));
-
           case S_ATTR_END:
           case S_TAG_SPACE:
           case S_TAG_CLOSE:
             break;
           //normal
-
           case S_ATTR_NOQUOT_VALUE: //Compatible state
-
           case S_ATTR:
             value = source.slice(start, p);
-
             if (value.slice(-1) === '/') {
               el.closed = true;
               value = value.slice(0, -1);
             }
-
           case S_ATTR_SPACE:
             if (s === S_ATTR_SPACE) {
               value = attrName;
             }
-
             if (s == S_ATTR_NOQUOT_VALUE) {
               errorHandler.warning('attribute "' + value + '" missed quot(")!!');
               el.add(attrName, value.replace(/&#?\w+;/g, entityReplacer), start);
@@ -6367,44 +5463,33 @@ function parseElementStartPart(source, start, el, currentNSMap, entityReplacer, 
               if (currentNSMap[''] !== 'http://www.w3.org/1999/xhtml' || !value.match(/^(?:disabled|checked|selected)$/i)) {
                 errorHandler.warning('attribute "' + value + '" missed value!! "' + value + '" instead!!');
               }
-
               el.add(value, value, start);
             }
-
             break;
-
           case S_EQ:
             throw new Error('attribute value missed!!');
-        } //			console.log(tagName,tagNamePattern,tagNamePattern.test(tagName))
-
-
+        }
+        //			console.log(tagName,tagNamePattern,tagNamePattern.test(tagName))
         return p;
-
       /*xml space '\x20' | #x9 | #xD | #xA; */
-
       case '\u0080':
         c = ' ';
-
       default:
         if (c <= ' ') {
           //space
           switch (s) {
             case S_TAG:
               el.setTagName(source.slice(start, p)); //tagName
-
               s = S_TAG_SPACE;
               break;
-
             case S_ATTR:
               attrName = source.slice(start, p);
               s = S_ATTR_SPACE;
               break;
-
             case S_ATTR_NOQUOT_VALUE:
               var value = source.slice(start, p).replace(/&#?\w+;/g, entityReplacer);
               errorHandler.warning('attribute "' + value + '" missed quot(")!!');
               el.add(attrName, value, start);
-
             case S_ATTR_END:
               s = S_TAG_SPACE;
               break;
@@ -6425,58 +5510,45 @@ function parseElementStartPart(source, start, el, currentNSMap, entityReplacer, 
             //case S_ATTR_NOQUOT_VALUE:void();break;
             case S_ATTR_SPACE:
               var tagName = el.tagName;
-
               if (currentNSMap[''] !== 'http://www.w3.org/1999/xhtml' || !attrName.match(/^(?:disabled|checked|selected)$/i)) {
                 errorHandler.warning('attribute "' + attrName + '" missed value!! "' + attrName + '" instead2!!');
               }
-
               el.add(attrName, attrName, start);
               start = p;
               s = S_ATTR;
               break;
-
             case S_ATTR_END:
               errorHandler.warning('attribute space is required"' + attrName + '"!!');
-
             case S_TAG_SPACE:
               s = S_ATTR;
               start = p;
               break;
-
             case S_EQ:
               s = S_ATTR_NOQUOT_VALUE;
               start = p;
               break;
-
             case S_TAG_CLOSE:
               throw new Error("elements closed character '/' and '>' must be connected to");
           }
         }
-
     } //end outer switch
     //console.log('p++',p)
-
-
     p++;
   }
 }
 /**
  * @return true if has new namespace define
  */
-
-
 function appendElement(el, domBuilder, currentNSMap) {
   var tagName = el.tagName;
-  var localNSMap = null; //var currentNSMap = parseStack[parseStack.length-1].currentNSMap;
-
+  var localNSMap = null;
+  //var currentNSMap = parseStack[parseStack.length-1].currentNSMap;
   var i = el.length;
-
   while (i--) {
     var a = el[i];
     var qName = a.qName;
     var value = a.value;
     var nsp = qName.indexOf(':');
-
     if (nsp > 0) {
       var prefix = a.prefix = qName.slice(0, nsp);
       var localName = qName.slice(nsp + 1);
@@ -6485,18 +5557,17 @@ function appendElement(el, domBuilder, currentNSMap) {
       localName = qName;
       prefix = null;
       nsPrefix = qName === 'xmlns' && '';
-    } //can not set prefix,because prefix !== ''
-
-
-    a.localName = localName; //prefix == null for no ns prefix attribute 
-
+    }
+    //can not set prefix,because prefix !== ''
+    a.localName = localName;
+    //prefix == null for no ns prefix attribute 
     if (nsPrefix !== false) {
       //hack!!
       if (localNSMap == null) {
-        localNSMap = {}; //console.log(currentNSMap,0)
-
-        _copy(currentNSMap, currentNSMap = {}); //console.log(currentNSMap,1)
-
+        localNSMap = {};
+        //console.log(currentNSMap,0)
+        _copy(currentNSMap, currentNSMap = {});
+        //console.log(currentNSMap,1)
       }
 
       currentNSMap[nsPrefix] = localNSMap[nsPrefix] = value;
@@ -6504,44 +5575,38 @@ function appendElement(el, domBuilder, currentNSMap) {
       domBuilder.startPrefixMapping(nsPrefix, value);
     }
   }
-
   var i = el.length;
-
   while (i--) {
     a = el[i];
     var prefix = a.prefix;
-
     if (prefix) {
       //no prefix attribute has no namespace
       if (prefix === 'xml') {
         a.uri = 'http://www.w3.org/XML/1998/namespace';
       }
-
       if (prefix !== 'xmlns') {
-        a.uri = currentNSMap[prefix || '']; //{console.log('###'+a.qName,domBuilder.locator.systemId+'',currentNSMap,a.uri)}
+        a.uri = currentNSMap[prefix || ''];
+
+        //{console.log('###'+a.qName,domBuilder.locator.systemId+'',currentNSMap,a.uri)}
       }
     }
   }
 
   var nsp = tagName.indexOf(':');
-
   if (nsp > 0) {
     prefix = el.prefix = tagName.slice(0, nsp);
     localName = el.localName = tagName.slice(nsp + 1);
   } else {
     prefix = null; //important!!
-
     localName = el.localName = tagName;
-  } //no prefix element has default namespace
-
-
+  }
+  //no prefix element has default namespace
   var ns = el.uri = currentNSMap[prefix || ''];
-  domBuilder.startElement(ns, localName, tagName, el); //endPrefixMapping and startPrefixMapping have not any help for dom builder
+  domBuilder.startElement(ns, localName, tagName, el);
+  //endPrefixMapping and startPrefixMapping have not any help for dom builder
   //localNSMap = null
-
   if (el.closed) {
     domBuilder.endElement(ns, localName, tagName);
-
     if (localNSMap) {
       for (prefix in localNSMap) {
         domBuilder.endPrefixMapping(prefix);
@@ -6549,53 +5614,47 @@ function appendElement(el, domBuilder, currentNSMap) {
     }
   } else {
     el.currentNSMap = currentNSMap;
-    el.localNSMap = localNSMap; //parseStack.push(el);
-
+    el.localNSMap = localNSMap;
+    //parseStack.push(el);
     return true;
   }
 }
-
 function parseHtmlSpecialContent(source, elStartEnd, tagName, entityReplacer, domBuilder) {
   if (/^(?:script|textarea)$/i.test(tagName)) {
     var elEndStart = source.indexOf('</' + tagName + '>', elStartEnd);
     var text = source.substring(elStartEnd + 1, elEndStart);
-
     if (/[&<]/.test(text)) {
       if (/^script$/i.test(tagName)) {
         //if(!/\]\]>/.test(text)){
         //lexHandler.startCDATA();
-        domBuilder.characters(text, 0, text.length); //lexHandler.endCDATA();
-
-        return elEndStart; //}
+        domBuilder.characters(text, 0, text.length);
+        //lexHandler.endCDATA();
+        return elEndStart;
+        //}
       } //}else{//text area
-
-
       text = text.replace(/&#?\w+;/g, entityReplacer);
       domBuilder.characters(text, 0, text.length);
-      return elEndStart; //}
+      return elEndStart;
+      //}
     }
   }
 
   return elStartEnd + 1;
 }
-
 function fixSelfClosed(source, elStartEnd, tagName, closeMap) {
   //if(tagName in closeMap){
   var pos = closeMap[tagName];
-
   if (pos == null) {
     //console.log(tagName)
     pos = source.lastIndexOf('</' + tagName + '>');
-
     if (pos < elStartEnd) {
       //忘记闭合
       pos = source.lastIndexOf('</' + tagName);
     }
-
     closeMap[tagName] = pos;
   }
-
-  return pos < elStartEnd; //} 
+  return pos < elStartEnd;
+  //} 
 }
 
 function _copy(source, target) {
@@ -6603,16 +5662,14 @@ function _copy(source, target) {
     target[n] = source[n];
   }
 }
-
 function parseDCC(source, start, domBuilder, errorHandler) {
   //sure start with '<!'
   var next = source.charAt(start + 2);
-
   switch (next) {
     case '-':
       if (source.charAt(start + 3) === '-') {
-        var end = source.indexOf('-->', start + 4); //append comment source.substring(4,end)//<!--
-
+        var end = source.indexOf('-->', start + 4);
+        //append comment source.substring(4,end)//<!--
         if (end > start) {
           domBuilder.comment(source, start + 4, end - start - 4);
           return end + 3;
@@ -6624,7 +5681,6 @@ function parseDCC(source, start, domBuilder, errorHandler) {
         //error
         return -1;
       }
-
     default:
       if (source.substr(start + 3, 6) == 'CDATA[') {
         var end = source.indexOf(']]>', start + 9);
@@ -6632,13 +5688,11 @@ function parseDCC(source, start, domBuilder, errorHandler) {
         domBuilder.characters(source, start + 9, end - start - 9);
         domBuilder.endCDATA();
         return end + 3;
-      } //<!DOCTYPE
+      }
+      //<!DOCTYPE
       //startDTD(java.lang.String name, java.lang.String publicId, java.lang.String systemId) 
-
-
       var matchs = split(source, start);
       var len = matchs.length;
-
       if (len > 1 && /!doctype/i.test(matchs[0][0])) {
         var name = matchs[1][0];
         var pubid = len > 3 && /^public$/i.test(matchs[2][0]) && matchs[3][0];
@@ -6648,18 +5702,13 @@ function parseDCC(source, start, domBuilder, errorHandler) {
         domBuilder.endDTD();
         return lastMatch.index + lastMatch[0].length;
       }
-
   }
-
   return -1;
 }
-
 function parseInstruction(source, start, domBuilder) {
   var end = source.indexOf('?>', start);
-
   if (end) {
     var match = source.substring(start, end).match(/^<\?(\S*)\s*([\s\S]*?)\s*$/);
-
     if (match) {
       var len = match[0].length;
       domBuilder.processingInstruction(match[1], match[2]);
@@ -6669,29 +5718,24 @@ function parseInstruction(source, start, domBuilder) {
       return -1;
     }
   }
-
   return -1;
 }
+
 /**
  * @param source
  */
-
-
 function ElementAttributes(source) {}
-
 ElementAttributes.prototype = {
   setTagName: function (tagName) {
     if (!tagNamePattern.test(tagName)) {
       throw new Error('invalid tagName:' + tagName);
     }
-
     this.tagName = tagName;
   },
   add: function (qName, value, offset) {
     if (!tagNamePattern.test(qName)) {
       throw new Error('invalid attribute:' + qName);
     }
-
     this[this.length++] = {
       qName: qName,
       value: value,
@@ -6713,7 +5757,8 @@ ElementAttributes.prototype = {
   },
   getValue: function (i) {
     return this[i].value;
-  } //	,getIndex:function(uri, localName)){
+  }
+  //	,getIndex:function(uri, localName)){
   //		if(localName){
   //			
   //		}else{
@@ -6723,7 +5768,6 @@ ElementAttributes.prototype = {
   //	getValue:function(){return this.getValue(this.getIndex.apply(this,arguments))},
   //	getType:function(uri,localName){}
   //	getType:function(i){},
-
 };
 
 function split(source, start) {
@@ -6732,13 +5776,11 @@ function split(source, start) {
   var reg = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?|(\/?\s*>|<)/g;
   reg.lastIndex = start;
   reg.exec(source); //skip <
-
   while (match = reg.exec(source)) {
     buf.push(match);
     if (match[1]) return buf;
   }
 }
-
 exports.XMLReader = XMLReader;
 
 },{}],44:[function(require,module,exports){

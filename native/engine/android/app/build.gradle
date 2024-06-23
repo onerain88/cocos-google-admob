@@ -10,6 +10,7 @@ android {
     compileSdkVersion PROP_COMPILE_SDK_VERSION.toInteger()
     buildToolsVersion PROP_BUILD_TOOLS_VERSION
     ndkPath PROP_NDK_PATH
+    namespace APPLICATION_ID
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

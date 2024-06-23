@@ -5,6 +5,8 @@ plugins {
 android {
     compileSdkVersion PROP_COMPILE_SDK_VERSION.toInteger()
 
+    namespace 'com.cocos.admob'
+
     defaultConfig {
         minSdkPreview PROP_MIN_SDK_VERSION
         targetSdkPreview PROP_TARGET_SDK_VERSION

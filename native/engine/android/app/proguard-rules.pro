@@ -40,3 +40,4 @@
 -dontwarn android.webkit.WebView
 -dontwarn android.net.http.SslError
 -dontwarn android.webkit.WebViewClient
+-dontwarn javax.lang.model.element.Modifier
