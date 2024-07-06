@@ -3,7 +3,23 @@ package com.cocos.admob.core;
 import android.util.Log;
 
 import com.cocos.admob.AdServiceHub;
+import com.cocos.admob.proto.VersionREQ;
+import com.cocos.admob.proto.appopen.IsAdAvailableREQ;
+import com.cocos.admob.proto.appopen.LoadAppOpenAdREQ;
+import com.cocos.admob.proto.appopen.ShowAppOpenAdREQ;
+import com.cocos.admob.proto.banner.DestroyBannerREQ;
+import com.cocos.admob.proto.banner.LoadBannerREQ;
+import com.cocos.admob.proto.banner.ShowBannerREQ;
+import com.cocos.admob.proto.interstitial.LoadInterstitialAdREQ;
+import com.cocos.admob.proto.interstitial.ShowInterstitialAdREQ;
+import com.cocos.admob.proto.nativead.DestroyNativeAdREQ;
+import com.cocos.admob.proto.nativead.LoadNativeAdREQ;
+import com.cocos.admob.proto.rewarded.LoadRewardedAdREQ;
+import com.cocos.admob.proto.rewarded.ShowRewardedAdREQ;
+import com.cocos.admob.proto.rewardedinterstitial.LoadRewardedInterstitialAdREQ;
+import com.cocos.admob.proto.rewardedinterstitial.ShowRewardedInterstitialAdREQ;
 import com.cocos.lib.JsbBridge;
+import com.cocos.lib.JsbBridgeWrapper;
 
 public class Bridge {
     private static final String TAG = "Bridge";
@@ -33,12 +49,30 @@ public class Bridge {
     }
 
     private void overwriteCallback() {
-        Log.d(TAG, "overwriteCallback: ");
-        JsbBridge.setCallback(new JsbBridge.ICallback() {
+        Log.d(TAG, "addCallback");
+        addScriptEventListener(VersionREQ.class.getSimpleName());
+        addScriptEventListener(LoadAppOpenAdREQ.class.getSimpleName());
+        addScriptEventListener(ShowAppOpenAdREQ.class.getSimpleName());
+        addScriptEventListener(IsAdAvailableREQ.class.getSimpleName());
+        addScriptEventListener(LoadBannerREQ.class.getSimpleName());
+        addScriptEventListener(ShowBannerREQ.class.getSimpleName());
+        addScriptEventListener(DestroyBannerREQ.class.getSimpleName());
+        addScriptEventListener(LoadInterstitialAdREQ.class.getSimpleName());
+        addScriptEventListener(ShowInterstitialAdREQ.class.getSimpleName());
+        addScriptEventListener(LoadNativeAdREQ.class.getSimpleName());
+        addScriptEventListener(DestroyNativeAdREQ.class.getSimpleName());
+        addScriptEventListener(LoadRewardedAdREQ.class.getSimpleName());
+        addScriptEventListener(ShowRewardedAdREQ.class.getSimpleName());
+        addScriptEventListener(LoadRewardedInterstitialAdREQ.class.getSimpleName());
+        addScriptEventListener(ShowRewardedInterstitialAdREQ.class.getSimpleName());
+    }
+
+    private void addScriptEventListener(String eventName) {
+        JsbBridgeWrapper.getInstance().addScriptEventListener(eventName, new JsbBridgeWrapper.OnScriptEventListener() {
             @Override
-            public void onScript(String arg0, String arg1) {
-                Log.d(TAG, "onScript: " + arg0 + " | " + arg1);
-                route.dispatch(arg0, arg1);
+            public void onScriptEvent(String arg) {
+                Log.d(TAG, "onScript: " + eventName + " | " + arg);
+                route.dispatch(eventName, arg);
             }
         });
     }
